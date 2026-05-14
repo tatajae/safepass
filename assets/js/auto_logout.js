@@ -1,14 +1,18 @@
-let timeout;
+let logoutTimer;
 
-function resetTimer() {
-    clearTimeout(timeout);
+function resetTimer(){
 
-    timeout = setTimeout(() => {
-        alert("Session expired. Auto logout.");
+  clearTimeout(logoutTimer);
 
-        window.location.href = "logout.php";
-    }, 300000);
+  logoutTimer = setTimeout(() => {
+
+    alert('Session expired');
+
+    window.location = '../api/logout.php';
+
+  }, 300000);
 }
+
 
 window.onload = resetTimer;
 

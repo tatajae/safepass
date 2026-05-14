@@ -1,38 +1,30 @@
 <?php
-
-session_start();
-
-if (!isset($_SESSION['user_id'])) {
-
-  header("Location: login.php");
-
-  exit;
-}
-
-include "../config/db.php";
-
-$user_id = $_SESSION['user_id'];
-
-$logs = mysqli_query(
-  $conn,
-  "SELECT * FROM logs
-   WHERE user_id='$user_id'
-   ORDER BY id DESC
-   LIMIT 5"
-);
-
+include '../config/session.php';
 ?>
 
 <!DOCTYPE html>
-<html>
+<html lang="en">
+
 <head>
 
-<title>Security</title>
+  <meta charset="UTF-8">
 
-<link rel="stylesheet"
-href="../assets/css/style.css">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0">
+
+  <title>Security Center</title>
+
+  <link rel="stylesheet"
+        href="../assets/css/style.css">
+
+  <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+
+  <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
 </head>
+
 <body>
 
 <div class="dashboard">
@@ -63,10 +55,6 @@ href="../assets/css/style.css">
         Dashboard
       </li>
 
-      <li onclick="window.location='dashboard.php'">
-        My Vault
-      </li>
-
       <li onclick="window.location='generator.php'">
         Generator
       </li>
@@ -81,11 +69,11 @@ href="../assets/css/style.css">
 
     </ul>
 
-    <a
-      href="../api/logout.php"
-      class="logout"
-    >
+    <a href="../api/logout.php"
+       class="logout">
+
       Logout
+
     </a>
 
   </div>
@@ -101,55 +89,161 @@ href="../assets/css/style.css">
         <h1>Security Center</h1>
 
         <p>
-          Monitoring keamanan akun
+          Sistem keamanan SafePass
         </p>
 
       </div>
 
     </div>
 
-    <!-- GRID -->
+    <!-- SECURITY CARDS -->
 
-    <div class="security-grid">
+    <div class="row g-4 mt-2">
 
-      <!-- SCORE -->
+      <!-- ENCRYPTION -->
 
-      <div class="security-card">
+      <div class="col-md-4">
 
-        <h3>Security Score</h3>
+        <div class="card shadow-lg border-0 rounded-4 p-3 h-100">
 
-        <div
-        style="
-        font-size:50px;
-        font-weight:700;
-        color:#374151;
-        ">
+          <div class="card-body">
 
-          92%
+            <div class="fs-1 mb-3">
+              🔐
+            </div>
+
+            <h3>
+              Encryption
+            </h3>
+
+            <p class="text-muted">
+
+              AES-256-GCM digunakan untuk
+              mengenkripsi password dengan
+              keamanan modern.
+
+            </p>
+
+          </div>
 
         </div>
 
-        <p>
-          Password vault aman dan terenkripsi
-        </p>
+      </div>
+
+      <!-- PBKDF2 -->
+
+      <div class="col-md-4">
+
+        <div class="card shadow-lg border-0 rounded-4 p-3 h-100">
+
+          <div class="card-body">
+
+            <div class="fs-1 mb-3">
+              🛡
+            </div>
+
+            <h3>
+              PBKDF2
+            </h3>
+
+            <p class="text-muted">
+
+              Derivasi key menggunakan
+              PBKDF2 SHA-256 dengan
+              600000 iterations.
+
+            </p>
+
+          </div>
+
+        </div>
 
       </div>
 
-      <!-- ACTIVITY -->
+      <!-- SESSION -->
 
-      <div class="security-card">
+      <div class="col-md-4">
 
-        <h3>Recent Activity</h3>
+        <div class="card shadow-lg border-0 rounded-4 p-3 h-100">
 
-        <?php while($log = mysqli_fetch_assoc($logs)){ ?>
+          <div class="card-body">
 
-        <p>
+            <div class="fs-1 mb-3">
+              ⏳
+            </div>
 
-          ✔ <?= $log['activity']; ?>
+            <h3>
+              Session Security
+            </h3>
 
-        </p>
+            <p class="text-muted">
 
-        <?php } ?>
+              Auto logout aktif setelah
+              5 menit tidak ada aktivitas.
+
+            </p>
+
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- PASSWORD -->
+
+      <div class="col-md-6">
+
+        <div class="card shadow-lg border-0 rounded-4 p-3 h-100">
+
+          <div class="card-body">
+
+            <div class="fs-1 mb-3">
+              🔑
+            </div>
+
+            <h3>
+              Password Protection
+            </h3>
+
+            <p class="text-muted">
+
+              Semua password dienkripsi
+              sebelum disimpan ke database.
+
+            </p>
+
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- ZERO KNOWLEDGE -->
+
+      <div class="col-md-6">
+
+        <div class="card shadow-lg border-0 rounded-4 p-3 h-100">
+
+          <div class="card-body">
+
+            <div class="fs-1 mb-3">
+              👁‍🗨
+            </div>
+
+            <h3>
+              Zero Knowledge
+            </h3>
+
+            <p class="text-muted">
+
+              Server tidak mengetahui
+              password asli pengguna.
+
+            </p>
+
+          </div>
+
+        </div>
 
       </div>
 
