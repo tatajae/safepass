@@ -1,54 +1,69 @@
 <?php
 
-include "../config/db.php";
+include '../config/db.php';
+
+session_start();
+
+header('Content-Type: application/json');
+
+/* SESSION VALIDATION */
+
+if(!isset($_SESSION['user_id'])){
+
+    echo json_encode([
+        "success" => false,
+        "message" => "Unauthorized"
+    ]);
+
+    exit;
+}
 
 $data = json_decode(
-  file_get_contents("php://input")
+    file_get_contents("php://input"),
+    true
 );
 
-$id =
-  $data->id;
+$id = $data['id'];
 
-$website =
-  $data->website;
+$service = $data['service'];
 
-$username =
-  $data->username;
+$encryptedData = $data['encrypted_data'];
 
-$ciphertext =
-  $data->ciphertext;
+$iv = $data['iv'];
 
-$iv =
-  $data->iv;
+$userId = $_SESSION['user_id'];
 
-$salt =
-  $data->salt;
+/* UPDATE ONLY OWN VAULT */
 
-$query = mysqli_query(
-  $conn,
-  "UPDATE vaults SET
-
-    website='$website',
-    username='$username',
-    ciphertext='$ciphertext',
-    iv='$iv',
-    salt='$salt'
-
-   WHERE id='$id'"
+$stmt = $conn->prepare(
+    "UPDATE vaults
+     SET service = ?,
+         encrypted_data = ?,
+         iv = ?
+     WHERE id = ?
+     AND user_id = ?"
 );
 
-if ($query) {
+$stmt->bind_param(
+    "sssii",
+    $service,
+    $encryptedData,
+    $iv,
+    $id,
+    $userId
+);
 
-  echo json_encode([
-    "success" => true,
-    "message" => "Vault berhasil diupdate"
-  ]);
+if($stmt->execute()){
 
-} else {
+    echo json_encode([
+        "success" => true,
+        "message" => "Vault berhasil diupdate"
+    ]);
 
-  echo json_encode([
-    "success" => false,
-    "message" => "Gagal update vault"
-  ]);
+}else{
+
+    echo json_encode([
+        "success" => false,
+        "message" => "Gagal update vault"
+    ]);
 }
-?>

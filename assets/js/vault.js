@@ -1,53 +1,63 @@
-async function saveVault() {
+const form = document.getElementById('vaultForm');
 
-  const website =
-    document.getElementById('website').value;
+form.addEventListener('submit', async (e) => {
+    e.preventDefault();
 
-  const username =
-    document.getElementById('username').value;
+    const service = document.getElementById('service').value;
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+    const notes = document.getElementById('notes').value;
 
-  const password =
-    document.getElementById('password').value;
+    const masterPassword = sessionStorage.getItem('masterPassword');
+    const salt = localStorage.getItem('salt');
 
-  const masterPassword = prompt(
-    'Masukkan Master Password'
-  );
-
-  const encrypted = await encryptData(
-    password,
-    masterPassword
-  );
-
-  const response = await fetch(
-    '../api/save_vault.php',
-    {
-      method: 'POST',
-
-      headers: {
-        'Content-Type': 'application/json'
-      },
-
-      body: JSON.stringify({
-
-        website,
+    const vaultData = {
         username,
+        password,
+        notes
+    };
 
-        ciphertext:
-          encrypted.ciphertext,
+    const encrypted = await encryptData(
+        masterPassword,
+        vaultData,
+        salt
+    );
 
-        iv:
-          encrypted.iv,
+    const response = await fetch('API/save_vault.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            service,
+            encrypted_data: encrypted.encrypted_data,
+            iv: encrypted.iv
+        })
+    });
 
-        salt:
-          encrypted.salt
+    const result = await response.json();
 
-      })
+    if(result.success) {
+        alert('Vault berhasil disimpan');
     }
-  );
+});
+async function loadVaults() {
 
-  const data = await response.json();
+    const response = await fetch('API/get_vaults.php');
+    const vaults = await response.json();
 
-  document.getElementById(
-    'result'
-  ).innerHTML = data.message;
+    const masterPassword = sessionStorage.getItem('masterPassword');
+    const salt = localStorage.getItem('salt');
+
+    for (const vault of vaults) {
+
+        const decrypted = await decryptData(
+            masterPassword,
+            vault.encrypted_data,
+            vault.iv,
+            salt
+        );
+
+        console.log(decrypted);
+    }
 }

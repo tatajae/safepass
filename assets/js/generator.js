@@ -1,9 +1,12 @@
 // assets/js/generator.js
 
+/* GENERATE PASSWORD */
+
 function generatePassword(){
 
-  const length =
-    document.getElementById('length').value;
+  const length = parseInt(
+    document.getElementById('length').value
+  );
 
   const uppercase =
     document.getElementById('uppercase').checked;
@@ -19,6 +22,15 @@ function generatePassword(){
 
   let chars = "";
 
+  /* VALIDASI LENGTH */
+
+  if(isNaN(length) || length < 4){
+
+    alert("Panjang password minimal 4");
+
+    return;
+  }
+
   /* CHARACTER OPTIONS */
 
   if (uppercase)
@@ -33,7 +45,7 @@ function generatePassword(){
   if (symbol)
     chars += "!@#$%^&*()_+{}[]<>?/";
 
-  /* VALIDASI */
+  /* VALIDASI OPSI */
 
   if(chars.length === 0){
 
@@ -42,20 +54,27 @@ function generatePassword(){
     return;
   }
 
-  /* GENERATE */
+  /* GENERATE SECURE PASSWORD */
 
   let password = "";
 
   for(let i = 0; i < length; i++){
 
-    password += chars.charAt(
-      Math.floor(Math.random() * chars.length)
-    );
+    const randomIndex =
+      crypto.getRandomValues(
+        new Uint32Array(1)
+      )[0] % chars.length;
+
+    password += chars[randomIndex];
   }
+
+  /* TAMPILKAN PASSWORD */
 
   document.getElementById(
     'resultPassword'
   ).value = password;
+
+  /* CEK STRENGTH */
 
   checkStrength(password);
 }
@@ -113,7 +132,7 @@ function checkStrength(password){
   if(/[0-9]/.test(password))
     score++;
 
-  if(/[\W]/.test(password))
+  if(/[!@#$%^&*()_+{}\[\]<>?/]/.test(password))
     score++;
 
   /* WEAK */

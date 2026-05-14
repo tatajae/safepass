@@ -1,31 +1,57 @@
 <?php
 
-include "../config/db.php";
+include '../config/db.php';
+
+session_start();
+
+header('Content-Type: application/json');
+
+/* SESSION VALIDATION */
+
+if(!isset($_SESSION['user_id'])){
+
+    echo json_encode([
+        "success" => false,
+        "message" => "Unauthorized"
+    ]);
+
+    exit;
+}
 
 $data = json_decode(
-  file_get_contents("php://input")
+    file_get_contents("php://input"),
+    true
 );
 
-$id = $data->id;
+$id = $data['id'];
 
-$query = mysqli_query(
-  $conn,
-  "DELETE FROM vaults
-   WHERE id='$id'"
+$userId = $_SESSION['user_id'];
+
+/* DELETE ONLY OWN VAULT */
+
+$stmt = $conn->prepare(
+    "DELETE FROM vaults
+     WHERE id = ?
+     AND user_id = ?"
 );
 
-if ($query) {
+$stmt->bind_param(
+    "ii",
+    $id,
+    $userId
+);
 
-  echo json_encode([
-    "success" => true,
-    "message" => "Vault berhasil dihapus"
-  ]);
+if($stmt->execute()){
 
-} else {
+    echo json_encode([
+        "success" => true,
+        "message" => "Vault berhasil dihapus"
+    ]);
 
-  echo json_encode([
-    "success" => false,
-    "message" => "Gagal menghapus vault"
-  ]);
+}else{
+
+    echo json_encode([
+        "success" => false,
+        "message" => "Gagal menghapus vault"
+    ]);
 }
-?>

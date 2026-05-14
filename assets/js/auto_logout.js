@@ -1,21 +1,25 @@
 let logoutTimer;
 
-function resetTimer(){
+// Reset timer setiap ada aktivitas user
+function resetTimer() {
 
-  clearTimeout(logoutTimer);
+    clearTimeout(logoutTimer);
 
-  logoutTimer = setTimeout(() => {
+    logoutTimer = setTimeout(() => {
 
-    alert('Session expired');
+        alert('Session expired. Anda akan logout otomatis.');
 
-    window.location = '../api/logout.php';
+        // Hancurkan session PHP
+        window.location.href = '../API/logout.php';
 
-  }, 300000);
+    }, 300000); // 5 menit
 }
 
-
+// Jalankan timer saat halaman dibuka
 window.onload = resetTimer;
 
+// Deteksi aktivitas user
 document.onmousemove = resetTimer;
-document.onkeypress = resetTimer;
+document.onkeydown = resetTimer;
 document.onclick = resetTimer;
+document.onscroll = resetTimer;

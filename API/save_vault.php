@@ -1,67 +1,50 @@
 <?php
 
+include '../config/db.php';
+
 session_start();
 
-include "../config/db.php";
+if(!isset($_SESSION['user_id'])){
 
-$data = json_decode(
-  file_get_contents("php://input")
+    echo json_encode([
+        "success" => false,
+        "message" => "Unauthorized"
+    ]);
+
+    exit;
+}
+header('Content-Type: application/json');
+
+$data = json_decode(file_get_contents("php://input"), true);
+
+$userId = $_SESSION['user_id'];
+
+$service = $data['service'];
+$encryptedData = $data['encrypted_data'];
+$iv = $data['iv'];
+
+$stmt = $conn->prepare(
+    "INSERT INTO vaults(user_id,service,encrypted_data,iv)
+     VALUES(?,?,?,?)"
 );
 
-$user_id = $_SESSION['user_id'];
-
-$website =
-  $data->website;
-
-$username =
-  $data->username;
-
-$ciphertext =
-  $data->ciphertext;
-
-$iv =
-  $data->iv;
-
-$salt =
-  $data->salt;
-
-$query = mysqli_query(
-  $conn,
-  "INSERT INTO vaults(
-
-    user_id,
-    website,
-    username,
-    ciphertext,
-    iv,
-    salt
-
-  )
-
-  VALUES(
-
-    '$user_id',
-    '$website',
-    '$username',
-    '$ciphertext',
-    '$iv',
-    '$salt'
-
-  )"
+$stmt->bind_param(
+    "isss",
+    $userId,
+    $service,
+    $encryptedData,
+    $iv
 );
 
-if ($query) {
+if($stmt->execute()) {
 
-  echo json_encode([
-    "success" => true,
-    "message" => "Vault berhasil disimpan"
-  ]);
+    echo json_encode([
+        "success" => true
+    ]);
 
 } else {
 
-  echo json_encode([
-    "success" => false,
-    "message" => "Gagal menyimpan vault"
-  ]);
+    echo json_encode([
+        "success" => false
+    ]);
 }
-?>

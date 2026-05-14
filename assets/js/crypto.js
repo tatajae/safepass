@@ -1,11 +1,30 @@
-// ===== PBKDF2 KEY DERIVATION =====
-async function deriveKey(password, salt) {
-    const enc = new TextEncoder();
+const encoder = new TextEncoder();
+const decoder = new TextDecoder();
 
+function arrayBufferToBase64(buffer) {
+    return btoa(String.fromCharCode(...new Uint8Array(buffer)));
+}
+
+function base64ToArrayBuffer(base64) {
+    return Uint8Array.from(atob(base64), c => c.charCodeAt(0));
+}
+
+// Generate random salt
+function generateSalt() {
+    return crypto.getRandomValues(new Uint8Array(16));
+}
+
+// Generate IV AES-GCM
+function generateIV() {
+    return crypto.getRandomValues(new Uint8Array(12));
+}
+
+// Derive AES Key dari master password
+async function deriveKey(masterPassword, salt) {
     const keyMaterial = await crypto.subtle.importKey(
         "raw",
-        enc.encode(password),
-        "PBKDF2",
+        encoder.encode(masterPassword),
+        { name: "PBKDF2" },
         false,
         ["deriveKey"]
     );
@@ -13,7 +32,7 @@ async function deriveKey(password, salt) {
     return crypto.subtle.deriveKey(
         {
             name: "PBKDF2",
-            salt: enc.encode(salt),
+            salt: salt,
             iterations: 210000,
             hash: "SHA-256"
         },
@@ -26,9 +45,20 @@ async function deriveKey(password, salt) {
         ["encrypt", "decrypt"]
     );
 }
-async function encryptData(key, data) {
-    const iv = crypto.getRandomValues(new Uint8Array(12));
-    const enc = new TextEncoder();
+
+// Encrypt data
+async function encryptData(masterPassword, data, saltBase64 = null) {
+    let salt;
+
+    if (saltBase64) {
+        salt = base64ToArrayBuffer(saltBase64);
+    } else {
+        salt = generateSalt();
+    }
+
+    const key = await deriveKey(masterPassword, salt);
+
+    const iv = generateIV();
 
     const encrypted = await crypto.subtle.encrypt(
         {
@@ -36,28 +66,31 @@ async function encryptData(key, data) {
             iv: iv
         },
         key,
-        enc.encode(data)
+        encoder.encode(JSON.stringify(data))
     );
 
     return {
-        iv: btoa(String.fromCharCode(...iv)),
-        data: btoa(String.fromCharCode(...new Uint8Array(encrypted)))
+        encrypted_data: arrayBufferToBase64(encrypted),
+        iv: arrayBufferToBase64(iv),
+        salt: arrayBufferToBase64(salt)
     };
 }
-async function decryptData(key, iv, data) {
-    const dec = new TextDecoder();
 
-    const ivArray = Uint8Array.from(atob(iv), c => c.charCodeAt(0));
-    const dataArray = Uint8Array.from(atob(data), c => c.charCodeAt(0));
+// Decrypt data
+async function decryptData(masterPassword, encryptedData, ivBase64, saltBase64) {
+    const salt = base64ToArrayBuffer(saltBase64);
+    const iv = base64ToArrayBuffer(ivBase64);
+
+    const key = await deriveKey(masterPassword, salt);
 
     const decrypted = await crypto.subtle.decrypt(
         {
             name: "AES-GCM",
-            iv: ivArray
+            iv: iv
         },
         key,
-        dataArray
+        base64ToArrayBuffer(encryptedData)
     );
 
-    return dec.decode(decrypted);
+    return JSON.parse(decoder.decode(decrypted));
 }
