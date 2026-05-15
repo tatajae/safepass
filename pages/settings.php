@@ -1,299 +1,197 @@
-<!-- pages/settings.php -->
-
 <?php
 
-session_start();
 include '../config/session.php';
-if (!isset($_SESSION['user_id'])) {
-
-  header("Location: login.php");
-
-  exit;
-}
-
-include "../config/db.php";
+include '../config/db.php';
 
 $user_id = $_SESSION['user_id'];
 
-$user = mysqli_fetch_assoc(
+/* GET USER */
+$stmt = $conn->prepare("
+    SELECT *
+    FROM users
+    WHERE id=?
+");
 
-  mysqli_query(
+$stmt->bind_param("i", $user_id);
+$stmt->execute();
 
-    $conn,
+$user = $stmt->get_result()->fetch_assoc();
 
-    "SELECT * FROM users
-     WHERE id='$user_id'"
-  )
-);
+
+/* GET LAST LOGIN FROM LOGS */
+$log_stmt = $conn->prepare("
+    SELECT created_at
+    FROM logs
+    WHERE user_id=?
+    AND activity='login'
+    ORDER BY created_at DESC
+    LIMIT 1
+");
+
+$log_stmt->bind_param("i", $user_id);
+$log_stmt->execute();
+
+$log = $log_stmt->get_result()->fetch_assoc();
+
+$last_login = $log['created_at'] ?? 'Belum ada login';
 
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
 
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<meta name="viewport"
-content="width=device-width, initial-scale=1.0">
+<title>Settings - SafePass</title>
 
-<title>SafePass Settings</title>
+<link rel="stylesheet" href="../assets/css/dashboard.css">
 
-<link rel="stylesheet"
-href="../assets/css/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
 
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
-rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
 </head>
+
 <body>
 
 <div class="dashboard">
 
-  <!-- SIDEBAR -->
-
-  <div class="sidebar">
+<!-- SIDEBAR -->
+<div class="sidebar">
 
     <div class="logo">
-
-      <div class="logo-icon">
-        🔒
-      </div>
-
-      <div>
-
-        <h2>SAFEPASS</h2>
-
-        <p>Password Manager</p>
-
-      </div>
-
+        <div class="logo-icon">🔒</div>
+        <div>
+            <h2>SAFEPASS</h2>
+            <p>Password Manager</p>
+        </div>
     </div>
 
     <ul>
-
-      <li onclick="window.location='dashboard.php'">
-        Dashboard
-      </li>
-
-      <li onclick="window.location='dashboard.php'">
-        My Vault
-      </li>
-
-      <li onclick="window.location='generator.php'">
-        Generator
-      </li>
-
-      <li onclick="window.location='security.php'">
-        Security
-      </li>
-
-      <li class="active">
-        Settings
-      </li>
-
+        <li onclick="window.location='dashboard.php'">Dashboard</li>
+        <li onclick="window.location='myvault.php'">My Vault</li>
+        <li onclick="window.location='generator.php'">Generator</li>
+        <li onclick="window.location='security.php'">Security</li>
+        <li class="active">Settings</li>
     </ul>
 
-    <a
-      href="../api/logout.php"
-      class="logout"
-    >
-      Logout
-    </a>
-
-  </div>
-
-  <!-- MAIN -->
-
-  <div class="main">
-
-    <!-- TOPBAR -->
-
-    <div class="topbar">
-
-      <div>
-
-        <h1>Settings</h1>
-
-        <p>
-          Kelola akun dan keamanan SafePass
-        </p>
-
-      </div>
-
-    </div>
-
-    <!-- SETTINGS GRID -->
-
-    <div class="settings-grid">
-
-      <!-- ACCOUNT SETTINGS -->
-
-      <div class="settings-card">
-
-        <h3>Account Settings</h3>
-
-        <p class="settings-subtitle">
-          Kelola akun dan backup data vault
-        </p>
-
-        <!-- DARK MODE -->
-
-        <button
-          class="save-btn full-btn"
-          onclick="toggleDarkMode()"
-        >
-          Toggle Dark Mode
-        </button>
-
-        <!-- EXPORT CSV -->
-
-        <a
-          href="../api/export_csv.php"
-          class="save-btn full-btn export-btn"
-        >
-          Export CSV
-        </a>
-
-        <!-- LAST LOGIN -->
-
-        <div class="app-info">
-
-          <strong>
-            Last Login
-          </strong>
-
-          <br><br>
-
-          <?= $user['last_login']; ?>
-
-          <br><br>
-
-          SafePass v1.0 <br>
-
-          UAS Keamanan Data <br>
-
-          AES-GCM Encryption Enabled
-
-        </div>
-
-      </div>
-
-      <!-- SECURITY SETTINGS -->
-
-      <div class="settings-card">
-
-        <h3>Security Settings</h3>
-
-        <p class="settings-subtitle">
-          Ganti password dan keamanan akun
-        </p>
-
-        <!-- INPUT -->
-
-        <input
-          type="password"
-          placeholder="Password Lama"
-        >
-
-        <input
-          type="password"
-          placeholder="Password Baru"
-        >
-
-        <input
-          type="password"
-          placeholder="Konfirmasi Password Baru"
-        >
-
-        <!-- OPTIONS -->
-
-        <div class="generator-options">
-
-          <label>
-
-            <input
-              type="checkbox"
-              checked
-            >
-
-            Aktifkan Session Timeout
-
-          </label>
-
-          <label>
-
-            <input
-              type="checkbox"
-              checked
-            >
-
-            Encrypt Semua Vault
-
-          </label>
-
-          <label>
-
-            <input
-              type="checkbox"
-            >
-
-            Dark Mode
-
-          </label>
-
-        </div>
-
-        <!-- BUTTON -->
-
-        <div class="button-group">
-
-          <button
-            class="save-btn"
-            onclick="saveSettings()"
-          >
-            Simpan
-          </button>
-
-          <button
-            class="cancel-btn"
-            onclick="resetSettings()"
-          >
-            Reset
-          </button>
-
-        </div>
-
-      </div>
-
-    </div>
-
-  </div>
+    <a href="../API/logout.php" class="logout">Logout</a>
 
 </div>
 
-<script>
+<!-- MAIN -->
+<div class="main">
 
-function saveSettings(){
+<div class="topbar">
+    <div>
+        <h1>Settings</h1>
+        <p>Kelola akun dan keamanan SafePass</p>
+    </div>
+</div>
 
-  alert(
-    "Pengaturan berhasil disimpan"
-  );
-}
+<div class="settings-grid">
 
-function resetSettings(){
+<!-- ACCOUNT -->
+<div class="settings-card">
 
-  location.reload();
-}
+<h3><i class="bi bi-person-circle"></i> Account</h3>
 
-function toggleDarkMode(){
+<div class="app-info">
 
-  document.body.classList.toggle(
-    'dark-mode'
-  );
-}
+<strong>User ID</strong><br>
+<?= htmlspecialchars($user['id']); ?>
 
-</script>
+<br><br>
 
+<strong>Last Login</strong><br>
+<?= htmlspecialchars($last_login); ?>
+
+<br><br>
+
+<strong>System</strong><br>
+AES-256-GCM Encryption<br>
+PBKDF2 SHA-256<br>
+Zero Knowledge Security
+
+</div>
+
+<br>
+
+<button class="save-btn full-btn" onclick="toggleDarkMode()">
+    <i class="bi bi-moon-fill"></i> Toggle Dark Mode
+</button>
+
+<br><br>
+
+<a href="../API/export_csv.php" class="save-btn full-btn export-btn">
+    <i class="bi bi-download"></i> Export Vault CSV
+</a>
+
+</div>
+
+<!-- SECURITY -->
+<div class="settings-card">
+
+<h3><i class="bi bi-shield-lock-fill"></i> Security</h3>
+
+<p class="settings-subtitle">
+Ganti password dan pengaturan keamanan
+</p>
+
+<!-- PASSWORD -->
+<input type="password" id="old_password" placeholder="Password Lama">
+
+<input type="password" id="new_password" placeholder="Password Baru">
+
+<input type="password" id="confirm_password" placeholder="Konfirmasi Password Baru">
+
+<!-- SETTINGS -->
+<div class="generator-options">
+
+<label>
+<input type="checkbox" id="session_timeout" checked>
+Aktifkan Session Timeout
+</label>
+
+<label>
+<input type="checkbox" id="encrypt_vault" checked>
+Encrypt Semua Vault
+</label>
+
+<label>
+<input type="checkbox" id="zero_knowledge" checked>
+Zero Knowledge Protection
+</label>
+
+</div>
+
+<!-- BUTTON -->
+<div class="button-group">
+
+<button class="save-btn" onclick="saveSettings()">
+<i class="bi bi-floppy-fill"></i> Simpan
+</button>
+
+<button class="cancel-btn" onclick="resetSettings()">
+<i class="bi bi-arrow-counterclockwise"></i> Reset
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<!-- JS -->
+<script src="../assets/js/auto_logout.js"></script>
+
+<script src="../assets/js/vault.js"></script>
 </body>
 </html>

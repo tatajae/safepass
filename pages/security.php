@@ -7,21 +7,27 @@ include '../config/session.php';
 
 <head>
 
-  <meta charset="UTF-8">
+    <meta charset="UTF-8">
 
-  <meta name="viewport"
-        content="width=device-width, initial-scale=1.0">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
 
-  <title>Security Center</title>
+    <title>Security Center - SafePass</title>
 
-  <link rel="stylesheet"
-        href="../assets/css/style.css">
+    <!-- CSS -->
 
-  <link rel="stylesheet"
-        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet"
+          href="../assets/css/dashboard.css">
 
-  <link rel="stylesheet"
-        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- BOOTSTRAP -->
+
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+
+    <!-- ICON -->
+
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
 </head>
 
@@ -29,229 +35,269 @@ include '../config/session.php';
 
 <div class="dashboard">
 
-  <!-- SIDEBAR -->
+    <!-- =========================
+         SIDEBAR
+    ========================== -->
 
-  <div class="sidebar">
+    <div class="sidebar">
 
-    <div class="logo">
+        <div class="logo">
 
-      <div class="logo-icon">
-        🔒
-      </div>
+            <div class="logo-icon">
+                🔒
+            </div>
 
-      <div>
+            <div>
 
-        <h2>SAFEPASS</h2>
+                <h2>SAFEPASS</h2>
 
-        <p>Password Manager</p>
+                <p>
+                    Password Manager
+                </p>
 
-      </div>
+            </div>
+
+        </div>
+
+        <!-- MENU -->
+
+        <ul>
+
+            <li onclick="window.location='dashboard.php'">
+
+                Dashboard
+
+            </li>
+
+            <li onclick="window.location='myvault.php'">
+
+                My Vault
+
+            </li>
+
+            <li onclick="window.location='generator.php'">
+
+                Generator
+
+            </li>
+
+            <li class="active">
+
+                Security
+
+            </li>
+
+            <li onclick="window.location='settings.php'">
+
+                Settings
+
+            </li>
+
+        </ul>
+
+        <!-- LOGOUT -->
+
+        <a href="../API/logout.php"
+           class="logout">
+
+            Logout
+
+        </a>
 
     </div>
 
-    <ul>
+    <!-- =========================
+         MAIN
+    ========================== -->
 
-      <li onclick="window.location='dashboard.php'">
-        Dashboard
-      </li>
+    <div class="main">
 
-      <li onclick="window.location='generator.php'">
-        Generator
-      </li>
+        <!-- TOPBAR -->
 
-      <li class="active">
-        Security
-      </li>
+        <div class="topbar">
 
-      <li onclick="window.location='settings.php'">
-        Settings
-      </li>
+            <div>
 
-    </ul>
+                <h1>
+                    Security Center
+                </h1>
 
-    <a href="../api/logout.php"
-       class="logout">
+                <p>
+                    Sistem keamanan SafePass
+                </p>
 
-      Logout
+            </div>
 
-    </a>
+        </div>
 
-  </div>
+        <!-- =========================
+             SECURITY GRID
+        ========================== -->
 
-  <!-- MAIN -->
+        <div class="stats-grid">
 
-  <div class="main">
+            <!-- ENCRYPTION -->
 
-    <div class="topbar">
+            <div class="stats-card">
 
-      <div>
+                <i class="bi bi-shield-lock-fill"></i>
 
-        <h1>Security Center</h1>
+                <h3>
+                    AES-256
+                </h3>
 
-        <p>
-          Sistem keamanan SafePass
-        </p>
+                <p>
 
-      </div>
+                    Semua vault dienkripsi
+                    menggunakan AES-256-GCM
+                    sebelum disimpan ke server.
+
+                </p>
+
+            </div>
+
+            <!-- PBKDF2 -->
+
+            <div class="stats-card">
+
+                <i class="bi bi-key-fill"></i>
+
+                <h3>
+                    PBKDF2
+                </h3>
+
+                <p>
+
+                    Key derivation menggunakan
+                    PBKDF2 SHA-256 dengan
+                    600000 iterations.
+
+                </p>
+
+            </div>
+
+            <!-- SESSION -->
+
+            <div class="stats-card">
+
+                <i class="bi bi-clock-history"></i>
+
+                <h3>
+                    Auto Logout
+                </h3>
+
+                <p>
+
+                    Session otomatis logout
+                    setelah 5 menit tidak
+                    ada aktivitas.
+
+                </p>
+
+            </div>
+
+            <!-- PASSWORD -->
+
+            <div class="stats-card">
+
+                <i class="bi bi-lock-fill"></i>
+
+                <h3>
+                    Password Protection
+                </h3>
+
+                <p>
+
+                    Password tidak pernah
+                    disimpan dalam bentuk
+                    plaintext di database.
+
+                </p>
+
+            </div>
+
+            <!-- ZERO KNOWLEDGE -->
+
+            <div class="stats-card">
+
+                <i class="bi bi-eye-slash-fill"></i>
+
+                <h3>
+                    Zero Knowledge
+                </h3>
+
+                <p>
+
+                    Server tidak dapat
+                    membaca password asli
+                    pengguna.
+
+                </p>
+
+            </div>
+
+            <!-- SECURE STORAGE -->
+
+            <div class="stats-card">
+
+                <i class="bi bi-database-lock"></i>
+
+                <h3>
+                    Secure Storage
+                </h3>
+
+                <p>
+
+                    Data vault hanya bisa
+                    didekripsi menggunakan
+                    master password user.
+
+                </p>
+
+            </div>
+
+        </div>
+
+        <!-- =========================
+             SECURITY INFO
+        ========================== -->
+
+        <div class="add-card mt-4">
+
+            <h3>
+
+                <i class="bi bi-info-circle-fill"></i>
+
+                Security Information
+
+            </h3>
+
+            <p style="margin-top:15px; line-height:30px; color:#d1d5db;">
+
+                SafePass menggunakan arsitektur
+                zero-knowledge encryption,
+                di mana seluruh proses
+                enkripsi dan dekripsi dilakukan
+                di sisi client menggunakan
+                JavaScript Web Crypto API.
+
+                <br><br>
+
+                Bahkan jika database server
+                diretas, attacker hanya akan
+                mendapatkan ciphertext yang
+                tidak dapat dibaca tanpa
+                master password pengguna.
+
+            </p>
+
+        </div>
 
     </div>
-
-    <!-- SECURITY CARDS -->
-
-    <div class="row g-4 mt-2">
-
-      <!-- ENCRYPTION -->
-
-      <div class="col-md-4">
-
-        <div class="card shadow-lg border-0 rounded-4 p-3 h-100">
-
-          <div class="card-body">
-
-            <div class="fs-1 mb-3">
-              🔐
-            </div>
-
-            <h3>
-              Encryption
-            </h3>
-
-            <p class="text-muted">
-
-              AES-256-GCM digunakan untuk
-              mengenkripsi password dengan
-              keamanan modern.
-
-            </p>
-
-          </div>
-
-        </div>
-
-      </div>
-
-      <!-- PBKDF2 -->
-
-      <div class="col-md-4">
-
-        <div class="card shadow-lg border-0 rounded-4 p-3 h-100">
-
-          <div class="card-body">
-
-            <div class="fs-1 mb-3">
-              🛡
-            </div>
-
-            <h3>
-              PBKDF2
-            </h3>
-
-            <p class="text-muted">
-
-              Derivasi key menggunakan
-              PBKDF2 SHA-256 dengan
-              600000 iterations.
-
-            </p>
-
-          </div>
-
-        </div>
-
-      </div>
-
-      <!-- SESSION -->
-
-      <div class="col-md-4">
-
-        <div class="card shadow-lg border-0 rounded-4 p-3 h-100">
-
-          <div class="card-body">
-
-            <div class="fs-1 mb-3">
-              ⏳
-            </div>
-
-            <h3>
-              Session Security
-            </h3>
-
-            <p class="text-muted">
-
-              Auto logout aktif setelah
-              5 menit tidak ada aktivitas.
-
-            </p>
-
-          </div>
-
-        </div>
-
-      </div>
-
-      <!-- PASSWORD -->
-
-      <div class="col-md-6">
-
-        <div class="card shadow-lg border-0 rounded-4 p-3 h-100">
-
-          <div class="card-body">
-
-            <div class="fs-1 mb-3">
-              🔑
-            </div>
-
-            <h3>
-              Password Protection
-            </h3>
-
-            <p class="text-muted">
-
-              Semua password dienkripsi
-              sebelum disimpan ke database.
-
-            </p>
-
-          </div>
-
-        </div>
-
-      </div>
-
-      <!-- ZERO KNOWLEDGE -->
-
-      <div class="col-md-6">
-
-        <div class="card shadow-lg border-0 rounded-4 p-3 h-100">
-
-          <div class="card-body">
-
-            <div class="fs-1 mb-3">
-              👁‍🗨
-            </div>
-
-            <h3>
-              Zero Knowledge
-            </h3>
-
-            <p class="text-muted">
-
-              Server tidak mengetahui
-              password asli pengguna.
-
-            </p>
-
-          </div>
-
-        </div>
-
-      </div>
-
-    </div>
-
-  </div>
 
 </div>
+
+<script src="../assets/js/auto_logout.js"></script>
 
 </body>
 </html>

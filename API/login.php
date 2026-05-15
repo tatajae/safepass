@@ -9,9 +9,11 @@ $data = json_decode(file_get_contents("php://input"), true);
 $email = $data['email'];
 $password = $data['password'];
 
-$stmt = $conn->prepare(
-    "SELECT * FROM users WHERE email = ?"
-);
+$stmt = $conn->prepare("
+    SELECT * 
+    FROM users 
+    WHERE email = ?
+");
 
 $stmt->bind_param("s", $email);
 $stmt->execute();
@@ -25,9 +27,20 @@ if($user && password_verify($password, $user['password_hash'])) {
 
     $_SESSION['user_id'] = $user['id'];
 
+    /* =========================
+       INSERT LOGIN LOG
+    ========================== */
+    $log_stmt = $conn->prepare("
+        INSERT INTO logs (user_id, activity, created_at)
+        VALUES (?, 'login', NOW())
+    ");
+
+    $log_stmt->bind_param("i", $user['id']);
+    $log_stmt->execute();
+
     echo json_encode([
         "success" => true,
-        "salt" => $user['salt'],
+        "message" => "Login berhasil",
         "user_id" => $user['id']
     ]);
 

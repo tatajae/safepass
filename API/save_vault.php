@@ -1,50 +1,84 @@
 <?php
 
 include '../config/db.php';
-
 session_start();
 
-if(!isset($_SESSION['user_id'])){
+header('Content-Type: application/json');
 
+/* AUTH */
+if(!isset($_SESSION['user_id'])){
     echo json_encode([
         "success" => false,
         "message" => "Unauthorized"
     ]);
-
     exit;
 }
-header('Content-Type: application/json');
 
+/* INPUT */
 $data = json_decode(file_get_contents("php://input"), true);
+
+if(!$data){
+    echo json_encode([
+        "success" => false,
+        "message" => "Invalid JSON"
+    ]);
+    exit;
+}
+
+/* VALIDATION */
+if(
+    empty($data['website']) ||
+    empty($data['username']) ||
+    empty($data['ciphertext']) ||
+    empty($data['iv']) ||
+    empty($data['salt']) ||
+    empty($data['tag'])
+){
+    echo json_encode([
+        "success" => false,
+        "message" => "Data tidak lengkap"
+    ]);
+    exit;
+}
 
 $userId = $_SESSION['user_id'];
 
-$service = $data['service'];
-$encryptedData = $data['encrypted_data'];
+$website = $data['website'];
+$username = $data['username'];
+$ciphertext = $data['ciphertext'];
 $iv = $data['iv'];
+$salt = $data['salt'];
+$tag = $data['tag'];
 
-$stmt = $conn->prepare(
-    "INSERT INTO vaults(user_id,service,encrypted_data,iv)
-     VALUES(?,?,?,?)"
-);
+/* INSERT */
+$stmt = $conn->prepare("
+    INSERT INTO vaults
+    (user_id, website, username, ciphertext, iv, salt, tag)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+");
 
 $stmt->bind_param(
-    "isss",
+    "issssss",
     $userId,
-    $service,
-    $encryptedData,
-    $iv
+    $website,
+    $username,
+    $ciphertext,
+    $iv,
+    $salt,
+    $tag
 );
 
-if($stmt->execute()) {
+if($stmt->execute()){
 
     echo json_encode([
-        "success" => true
+        "success" => true,
+        "message" => "Vault berhasil disimpan"
     ]);
 
 } else {
 
     echo json_encode([
-        "success" => false
+        "success" => false,
+        "message" => "Database error"
     ]);
 }

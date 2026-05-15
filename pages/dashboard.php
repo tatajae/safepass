@@ -1,28 +1,64 @@
-<!-- dashboard.php -->
-
 <?php
 
 include '../config/session.php';
-
-header("Cache-Control: no-cache, no-store, must-revalidate");
-header("Pragma: no-cache");
-header("Expires: 0");
-
-include "../config/db.php";
+include '../config/db.php';
 
 $user_id = $_SESSION['user_id'];
 
-$stmt = $conn->prepare(
-    "SELECT * FROM vaults
-     WHERE user_id=?
-     ORDER BY id DESC"
+/* =========================
+   TOTAL VAULT
+========================= */
+
+$stmtVault = $conn->prepare(
+    "SELECT COUNT(*) as total
+     FROM vaults
+     WHERE user_id=?"
 );
 
-$stmt->bind_param("i", $user_id);
+$stmtVault->bind_param("i", $user_id);
 
-$stmt->execute();
+$stmtVault->execute();
 
-$query = $stmt->get_result();
+$totalVault = $stmtVault
+    ->get_result()
+    ->fetch_assoc()['total'];
+
+/* =========================
+   WEAK PASSWORD
+========================= */
+
+$stmtWeak = $conn->prepare(
+    "SELECT COUNT(*) as weak
+     FROM vaults
+     WHERE user_id=?
+     AND password_strength='Weak'"
+);
+
+$stmtWeak->bind_param("i", $user_id);
+
+$stmtWeak->execute();
+
+$weakPassword = $stmtWeak
+    ->get_result()
+    ->fetch_assoc()['weak'];
+
+/* =========================
+   SECURITY SCORE
+========================= */
+
+if($totalVault > 0){
+
+    $securityScore =
+        100 - (
+            ($weakPassword / $totalVault) * 100
+        );
+
+}else{
+
+    $securityScore = 100;
+}
+
+$securityScore = round($securityScore);
 
 ?>
 
@@ -39,7 +75,7 @@ $query = $stmt->get_result();
     <title>SafePass Dashboard</title>
 
     <link rel="stylesheet"
-          href="../assets/css/style.css">
+          href="../assets/css/dashboard.css">
 
     <link rel="stylesheet"
           href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
@@ -67,7 +103,9 @@ $query = $stmt->get_result();
 
                 <h2>SAFEPASS</h2>
 
-                <p>Password Manager</p>
+                <p>
+                    Password Manager
+                </p>
 
             </div>
 
@@ -77,6 +115,10 @@ $query = $stmt->get_result();
 
             <li class="active">
                 Dashboard
+            </li>
+
+            <li onclick="window.location='myvault.php'">
+                My Vault
             </li>
 
             <li onclick="window.location='generator.php'">
@@ -93,7 +135,7 @@ $query = $stmt->get_result();
 
         </ul>
 
-        <a href="../api/logout.php"
+        <a href="../API/logout.php"
            class="logout">
 
             Logout
@@ -106,289 +148,103 @@ $query = $stmt->get_result();
 
     <div class="main">
 
+        <!-- TOPBAR -->
+
         <div class="topbar">
 
             <div>
 
-                <h1>My Vault</h1>
+                <h1>
+                    Dashboard
+                </h1>
 
                 <p>
-                    Simpan password terenkripsi dengan aman
+                    Welcome back 👋
                 </p>
 
             </div>
 
-            <button class="add-password-btn"
-                    onclick="generatePassword()">
+        </div>
 
-                + Generate Password
+        <!-- STATS -->
+
+        <div class="stats-grid">
+
+            <!-- TOTAL VAULT -->
+
+            <div class="stats-card">
+
+                <i class="bi bi-shield-lock"></i>
+
+                <h3>
+                    <?= $totalVault; ?>
+                </h3>
+
+                <p>
+                    Total Vault
+                </p>
+
+            </div>
+
+            <!-- WEAK PASSWORD -->
+
+            <div class="stats-card">
+
+                <i class="bi bi-exclamation-triangle"></i>
+
+                <h3>
+                    <?= $weakPassword; ?>
+                </h3>
+
+                <p>
+                    Weak Password
+                </p>
+
+            </div>
+
+            <!-- SECURITY SCORE -->
+
+            <div class="stats-card">
+
+                <i class="bi bi-graph-up"></i>
+
+                <h3>
+                    <?= $securityScore; ?>%
+                </h3>
+
+                <p>
+                    Security Score
+                </p>
+
+            </div>
+
+        </div>
+
+        <!-- QUICK ACTION -->
+
+        <div class="quick-actions">
+
+            <button
+                onclick="window.location='myvault.php'"
+                class="action-btn">
+
+                Open My Vault
+
+            </button>
+
+            <button
+                onclick="window.location='generator.php'"
+                class="action-btn">
+
+                Generate Password
 
             </button>
 
         </div>
 
-        <!-- SEARCH -->
-
-        <input type="text"
-               id="search"
-               placeholder="Cari website atau username..."
-               class="search-input"
-               onkeyup="searchVault()">
-
-        <!-- TABLE -->
-
-        <div class="vault-table">
-
-            <div class="table-header">
-
-                <span>Website / App</span>
-
-                <span>Username</span>
-
-                <span>Password</span>
-
-                <span>Aksi</span>
-
-            </div>
-
-            <?php if(mysqli_num_rows($query) > 0): ?>
-
-                <?php while($row = mysqli_fetch_assoc($query)): ?>
-
-                    <div class="table-row">
-
-                        <span>
-                            <?= htmlspecialchars($row['website']); ?>
-                        </span>
-
-                        <span>
-                            <?= htmlspecialchars($row['username']); ?>
-                        </span>
-
-                        <span>
-                            ••••••••
-                        </span>
-
-                        <span class="actions">
-
-                            <!-- VIEW -->
-
-                            <button
-                                class="view-btn"
-
-                                data-cipher="<?= htmlspecialchars($row['ciphertext']); ?>"
-
-                                data-iv="<?= htmlspecialchars($row['iv']); ?>"
-
-                                data-salt="<?= htmlspecialchars($row['salt']); ?>"
-
-                                onclick="openDecryptModal(this)"
-                            >
-
-                                <i class="bi bi-eye"></i>
-
-                            </button>
-
-                            <!-- COPY -->
-
-                            <button
-                                class="copy-btn"
-
-                                data-cipher="<?= htmlspecialchars($row['ciphertext']); ?>"
-
-                                data-iv="<?= htmlspecialchars($row['iv']); ?>"
-
-                                data-salt="<?= htmlspecialchars($row['salt']); ?>"
-
-                                onclick="copyPassword(this)"
-                            >
-
-                                <i class="bi bi-clipboard"></i>
-
-                            </button>
-
-                            <!-- EDIT -->
-
-                            <button
-                                class="edit-btn"
-
-                                onclick="editVault(
-                                    <?= $row['id']; ?>,
-                                    '<?= htmlspecialchars($row['website']); ?>',
-                                    '<?= htmlspecialchars($row['username']); ?>'
-                                )"
-                            >
-
-                                <i class="bi bi-pencil-square"></i>
-
-                            </button>
-
-                            <!-- DELETE -->
-
-                            <button
-                                class="delete-btn"
-
-                                onclick="deleteVault(
-                                    <?= $row['id']; ?>
-                                )"
-                            >
-
-                                <i class="bi bi-trash"></i>
-
-                            </button>
-
-                        </span>
-
-                    </div>
-
-                <?php endwhile; ?>
-
-            <?php else: ?>
-
-                <div class="empty-state text-center mt-5">
-
-                    <h3>
-                        Belum ada password tersimpan
-                    </h3>
-
-                    <p>
-                        Tambahkan vault pertama kamu
-                    </p>
-
-                </div>
-
-            <?php endif; ?>
-
-        </div>
-
-        <!-- FORM -->
-
-        <div class="add-card">
-
-            <h3>Tambah Password</h3>
-
-            <input
-                type="text"
-                id="website"
-                placeholder="Website / App"
-            >
-
-            <input
-                type="text"
-                id="username"
-                placeholder="Username / Email"
-            >
-
-            <div class="password-wrapper">
-
-                <input
-                    type="password"
-                    id="password"
-                    placeholder="Password"
-                    onkeyup="checkStrength()"
-                >
-
-                <button
-                    type="button"
-                    onclick="togglePassword()"
-                >
-
-                    <i class="bi bi-eye"></i>
-
-                </button>
-
-            </div>
-
-            <div id="strength"
-                 class="mt-2">
-            </div>
-
-            <div class="button-group">
-
-                <button
-                    class="save-btn"
-                    onclick="saveVault()"
-                >
-
-                    Simpan
-
-                </button>
-
-                <button
-                    class="cancel-btn"
-                    onclick="clearForm()"
-                >
-
-                    Batal
-
-                </button>
-
-            </div>
-
-        </div>
-
     </div>
 
 </div>
-
-<!-- MODAL -->
-
-<div class="modal fade"
-     id="decryptModal"
-     tabindex="-1">
-
-    <div class="modal-dialog">
-
-        <div class="modal-content bg-dark text-white">
-
-            <div class="modal-header">
-
-                <h5 class="modal-title">
-                    Master Password
-                </h5>
-
-                <button type="button"
-                        class="btn-close btn-close-white"
-                        data-bs-dismiss="modal">
-                </button>
-
-            </div>
-
-            <div class="modal-body">
-
-                <input type="password"
-                       id="masterPassword"
-                       class="form-control"
-                       placeholder="Masukkan Master Password">
-
-                <div id="decryptResult"
-                     class="mt-3">
-                </div>
-
-            </div>
-
-            <div class="modal-footer">
-
-                <button class="btn btn-success"
-                        onclick="decryptVault()">
-
-                    Decrypt
-
-                </button>
-
-            </div>
-
-        </div>
-
-    </div>
-
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
-<script src="../assets/js/crypto.js"></script>
-
-<script src="../assets/js/dashboard.js"></script>
 
 <script src="../assets/js/auto_logout.js"></script>
 
