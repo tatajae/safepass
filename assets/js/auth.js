@@ -1,36 +1,31 @@
 async function register() {
 
-  const name =
-    document.getElementById('name').value;
+  const name = document.getElementById('name').value;
+  const email = document.getElementById('email').value;
+  const password = document.getElementById('password').value;
 
-  const email =
-    document.getElementById('email').value;
+  try {
 
-  const password =
-    document.getElementById('password').value;
-
-  const response = await fetch(
-    '../api/register.php',
-    {
+    const response = await fetch('../api/register.php', {
       method: 'POST',
-
       headers: {
         'Content-Type': 'application/json'
       },
+      body: JSON.stringify({ name, email, password })
+    });
 
-      body: JSON.stringify({
-        name,
-        email,
-        password
-      })
+    const data = await response.json();
+
+    alert(data.message);
+
+    if(data.success){
+      window.location = 'login.php';
     }
-  );
 
-  const data = await response.json();
-
-  alert(data.message);
-
-  window.location = 'login.php';
+  } catch(err){
+    console.error(err);
+    alert("Server error / API tidak ditemukan");
+  }
 }
 
 async function login() {
