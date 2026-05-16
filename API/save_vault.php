@@ -1,84 +1,62 @@
 <?php
 
-include '../config/db.php';
 session_start();
+
+include '../config/db.php';
 
 header('Content-Type: application/json');
 
-/* AUTH */
-if(!isset($_SESSION['user_id'])){
-    echo json_encode([
-        "success" => false,
-        "message" => "Unauthorized"
-    ]);
-    exit;
-}
+$data = json_decode(
+    file_get_contents("php://input"),
+    true
+);
 
-/* INPUT */
-$data = json_decode(file_get_contents("php://input"), true);
+$user_id =
+  $_SESSION['user_id'];
 
-if(!$data){
-    echo json_encode([
-        "success" => false,
-        "message" => "Invalid JSON"
-    ]);
-    exit;
-}
+$encrypted_data =
+  $data['encrypted_data'];
 
-/* VALIDATION */
-if(
-    empty($data['website']) ||
-    empty($data['username']) ||
-    empty($data['ciphertext']) ||
-    empty($data['iv']) ||
-    empty($data['salt']) ||
-    empty($data['tag'])
-){
-    echo json_encode([
-        "success" => false,
-        "message" => "Data tidak lengkap"
-    ]);
-    exit;
-}
+$iv =
+  $data['iv'];
 
-$userId = $_SESSION['user_id'];
+$salt =
+  $data['salt'];
 
-$website = $data['website'];
-$username = $data['username'];
-$ciphertext = $data['ciphertext'];
-$iv = $data['iv'];
-$salt = $data['salt'];
-$tag = $data['tag'];
-
-/* INSERT */
 $stmt = $conn->prepare("
-    INSERT INTO vaults
-    (user_id, website, username, ciphertext, iv, salt, tag)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO vaults(
+        user_id,
+        encrypted_data,
+        iv,
+        salt
+    )
+    VALUES(?,?,?,?)
 ");
 
 $stmt->bind_param(
-    "issssss",
-    $userId,
-    $website,
-    $username,
-    $ciphertext,
+    "isss",
+    $user_id,
+    $encrypted_data,
     $iv,
-    $salt,
-    $tag
+    $salt
 );
-
-if($stmt->execute()){
+if(empty($encrypted_data)){
+    echo json_encode([
+        "success"=>false,
+        "message"=>"Data kosong"
+    ]);
+    exit;
+}elseif($stmt->execute()){
 
     echo json_encode([
-        "success" => true,
-        "message" => "Vault berhasil disimpan"
+        "success"=>true,
+        "message"=>"Vault tersimpan"
     ]);
 
-} else {
+}else{
 
     echo json_encode([
-        "success" => false,
-        "message" => "Database error"
+        "success"=>false,
+        "message"=>"Gagal menyimpan"
     ]);
 }

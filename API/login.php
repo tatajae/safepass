@@ -4,38 +4,60 @@ include '../config/db.php';
 
 header('Content-Type: application/json');
 
-$data = json_decode(file_get_contents("php://input"), true);
+$data = json_decode(
+    file_get_contents("php://input"),
+    true
+);
 
-$email = $data['email'];
-$password = $data['password'];
+$email = $data['email'] ?? '';
+
+$authVerifier =
+    $data['authVerifier'] ?? '';
 
 $stmt = $conn->prepare("
-    SELECT * 
-    FROM users 
+    SELECT *
+    FROM users
     WHERE email = ?
 ");
 
 $stmt->bind_param("s", $email);
+
 $stmt->execute();
 
 $result = $stmt->get_result();
+
 $user = $result->fetch_assoc();
 
-if($user && password_verify($password, $user['password_hash'])) {
+if(
+    $user &&
+    hash_equals(
+        $user['auth_verifier'],
+        $authVerifier
+    )
+){
 
     session_start();
 
-    $_SESSION['user_id'] = $user['id'];
+    session_regenerate_id(true);
 
-    /* =========================
-       INSERT LOGIN LOG
-    ========================== */
+    $_SESSION['user_id'] =
+        $user['id'];
+
+    /* INSERT LOGIN LOG */
     $log_stmt = $conn->prepare("
-        INSERT INTO logs (user_id, activity, created_at)
+        INSERT INTO logs (
+            user_id,
+            activity,
+            created_at
+        )
         VALUES (?, 'login', NOW())
     ");
 
-    $log_stmt->bind_param("i", $user['id']);
+    $log_stmt->bind_param(
+        "i",
+        $user['id']
+    );
+
     $log_stmt->execute();
 
     echo json_encode([

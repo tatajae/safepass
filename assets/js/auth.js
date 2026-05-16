@@ -1,18 +1,50 @@
 async function register() {
 
-  const name = document.getElementById('name').value;
-  const email = document.getElementById('email').value;
-  const password = document.getElementById('password').value;
+  const name =
+    document.getElementById('name').value;
+
+  const email =
+    document.getElementById('email').value;
+
+  const password =
+    document.getElementById('password').value;
 
   try {
 
-    const response = await fetch('../api/register.php', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ name, email, password })
-    });
+    /* GENERATE SALT */
+    const saltArray =
+      crypto.getRandomValues(
+        new Uint8Array(16)
+      );
+
+    const salt = btoa(
+      String.fromCharCode(...saltArray)
+    );
+
+    /* DERIVE AUTH VERIFIER */
+    const authVerifier =
+      await deriveAuthVerifier(
+        password,
+        salt
+      );
+
+    const response = await fetch(
+      '../api/register.php',
+      {
+        method: 'POST',
+
+        headers: {
+          'Content-Type': 'application/json'
+        },
+
+        body: JSON.stringify({
+          name,
+          email,
+          authVerifier,
+          salt
+        })
+      }
+    );
 
     const data = await response.json();
 
@@ -23,8 +55,12 @@ async function register() {
     }
 
   } catch(err){
+
     console.error(err);
-    alert("Server error / API tidak ditemukan");
+
+    alert(
+      "Server error / API tidak ditemukan"
+    );
   }
 }
 
@@ -36,41 +72,73 @@ async function login() {
   const password =
     document.getElementById('password').value;
 
-  const response = await fetch(
-    '../api/login.php',
-    {
-      method: 'POST',
+  try {
 
-      headers: {
-        'Content-Type': 'application/json'
-      },
+    /* AMBIL SALT USER */
+    const saltResponse =
+      await fetch(
+        `../api/get_salt.php?email=${encodeURIComponent(email)}`
+      );
 
-      body: JSON.stringify({
-        email,
-        password
-      })
+    const saltData =
+      await saltResponse.json();
+
+    if(!saltData.success){
+
+      alert("User tidak ditemukan");
+
+      return;
     }
-  );
 
-  const data = await response.json();
+    /* DERIVE AUTH VERIFIER */
+    const authVerifier =
+      await deriveAuthVerifier(
+        password,
+        saltData.salt
+      );
 
-  if (data.success) {
+    /* LOGIN */
+    const response =
+      await fetch(
+        '../api/login.php',
+        {
+          method: 'POST',
 
-    alert('Login berhasil');
+          headers: {
+            'Content-Type':
+              'application/json'
+          },
 
-    window.location = 'dashboard.php';
+          body: JSON.stringify({
+            email,
+            authVerifier
+          })
+        }
+      );
 
-  } else {
+    const data =
+      await response.json();
 
-    alert(data.message);
+    if (data.success) {
+      sessionStorage.setItem(
+        'masterPassword',
+        password
+      );
 
+      alert('Login berhasil');
+
+      window.location =
+        'dashboard.php';
+
+    } else {
+
+      alert(data.message);
+    }
+
+  } catch(err){
+
+    console.error(err);
+
+    alert("Server error");
   }
 }
-
-setTimeout(() => {
-
-  alert('Session habis');
-
-  window.location = 'login.php';
-
-}, 900000);

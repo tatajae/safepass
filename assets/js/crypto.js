@@ -46,6 +46,41 @@ async function deriveKey(masterPassword, salt) {
     );
 }
 
+// Derive auth verifier untuk login
+async function deriveAuthVerifier(
+    masterPassword,
+    saltBase64
+){
+
+    const salt =
+        base64ToArrayBuffer(saltBase64);
+
+    const keyMaterial =
+        await crypto.subtle.importKey(
+            "raw",
+            encoder.encode(masterPassword),
+            { name: "PBKDF2" },
+            false,
+            ["deriveBits"]
+        );
+
+    const derivedBits =
+        await crypto.subtle.deriveBits(
+            {
+                name: "PBKDF2",
+                salt: salt,
+                iterations: 210000,
+                hash: "SHA-256"
+            },
+            keyMaterial,
+            256
+        );
+
+    return arrayBufferToBase64(
+        derivedBits
+    );
+}
+
 // Encrypt data
 async function encryptData(masterPassword, data, saltBase64 = null) {
     let salt;

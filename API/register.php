@@ -7,39 +7,53 @@ header('Content-Type: application/json');
 $data = json_decode(file_get_contents("php://input"), true);
 
 if(!$data){
+
     echo json_encode([
         "success" => false,
         "message" => "Invalid JSON"
     ]);
+
     exit;
 }
 
 $name = trim($data['name'] ?? '');
 $email = trim($data['email'] ?? '');
-$password = $data['password'] ?? '';
 
-if($name == '' || $email == '' || $password == ''){
+$authVerifier = $data['authVerifier'] ?? '';
+$salt = $data['salt'] ?? '';
+
+if(
+    $name == '' ||
+    $email == '' ||
+    $authVerifier == '' ||
+    $salt == ''
+){
+
     echo json_encode([
         "success" => false,
         "message" => "Semua field wajib diisi"
     ]);
+
     exit;
 }
 
-/* HASH PASSWORD */
-$passwordHash = password_hash($password, PASSWORD_BCRYPT);
-
 /* INSERT */
 $stmt = $conn->prepare("
-    INSERT INTO users(name,email,password_hash)
-    VALUES(?,?,?)
+    INSERT INTO users(
+        name,
+        email,
+        auth_verifier,
+        salt
+    )
+    VALUES(?,?,?,?)
 ");
 
 $stmt->bind_param(
-    "sss",
+    "ssss",
     $name,
     $email,
-    $passwordHash
+    $authVerifier,
+    $salt
 );
 
 if($stmt->execute()){

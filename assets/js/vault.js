@@ -1,7 +1,156 @@
 
 let mode = "add";
 let editId = null;
+/*===================/
+   VAULT ENCRYPTION
+/===================*/
 
+async function savePassword(){
+
+    const website =
+      document.getElementById('website').value;
+
+    const username =
+      document.getElementById('username').value;
+
+    const password =
+      document.getElementById('password').value;
+
+    const notes =
+      document.getElementById('notes').value;
+
+/* VALIDASI */ 
+    if( !website || !username || !password ){ 
+      alert( "Website, Username, dan Password wajib diisi" ); 
+      return; 
+    }
+
+    const vaultData = {
+        website,
+        username,
+        password,
+        notes
+    };
+
+    const masterPassword =
+      sessionStorage.getItem(
+        'masterPassword'
+      );
+
+    const encrypted =
+      await encryptData(
+        masterPassword,
+        vaultData
+      );
+
+    const response =
+      await fetch(
+        '../api/save_vault.php',
+        {
+            method:'POST',
+
+            headers:{
+                'Content-Type':
+                  'application/json'
+            },
+
+            body: JSON.stringify({
+                encrypted_data:
+                  encrypted.encrypted_data,
+
+                iv:
+                  encrypted.iv,
+
+                salt:
+                  encrypted.salt
+            })
+        }
+      );
+
+    const data =
+      await response.json();
+
+    alert(data.message);
+
+    if(data.success){
+        loadVault();
+    }
+}
+
+async function loadVault(){
+
+    try{
+
+        const response =
+          await fetch(
+            '../api/get_vault.php'
+          );
+
+        const data =
+          await response.json();
+
+        if(!data.success){
+
+            alert("Gagal load vault");
+
+            return;
+        }
+
+        const masterPassword =
+          sessionStorage.getItem(
+            'masterPassword'
+          );
+
+        const vaultContainer =
+          document.getElementById(
+            'vaultContainer'
+          );
+
+        vaultContainer.innerHTML = '';
+
+        for(const item of data.vaults){
+
+            const decrypted =
+              await decryptData(
+                masterPassword,
+                item.encrypted_data,
+                item.iv,
+                item.salt
+              );
+
+            vaultContainer.innerHTML += `
+                <div class="vault-card">
+
+                    <h3>
+                      ${decrypted.website}
+                    </h3>
+
+                    <p>
+                      Username:
+                      ${decrypted.username}
+                    </p>
+
+                    <p>
+                      Password:
+                      ${decrypted.password}
+                    </p>
+
+                    <p>
+                      Notes:
+                      ${decrypted.notes}
+                    </p>
+
+                </div>
+            `;
+        }
+
+    } catch(err){
+
+        console.error(err);
+
+        alert("Gagal decrypt vault");
+    }
+}
 /* =========================
    DARK MODE
 ========================= */
@@ -22,89 +171,14 @@ window.toggleDarkMode = function(){
 ========================= */
 window.onload = function(){
 
+    /* LOAD THEME */
     if(localStorage.getItem("theme") === "dark"){
         document.body.classList.add("dark-mode");
     }
+
+    /* LOAD VAULT */
+    loadVault();
 };
-
-/* =========================
-   SAVE VAULT (ADD / EDIT)
-========================= */
-async function saveVault(){
-
-    const website = document.getElementById('website').value;
-    const username = document.getElementById('username').value;
-    const password = document.getElementById('password').value;
-
-    if(!website || !username || !password){
-        alert("Semua field wajib diisi");
-        return;
-    }
-
-    let url = "";
-    let payload = {};
-
-    if(mode === "add"){
-
-        url = "../api/tambah_vault.php";
-
-        payload = {
-            website,
-            username,
-            password
-        };
-
-    } else {
-
-        url = "../api/edit_vault.php";
-
-        payload = {
-            id: editId,
-            website,
-            username,
-            password
-        };
-    }
-
-    try {
-
-        const res = await fetch(url, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(payload)
-        });
-
-        const data = await res.json();
-
-        alert(data.message);
-
-        if(data.success){
-            clearForm();
-            location.reload();
-        }
-
-    } catch(err){
-        console.error(err);
-        alert("Terjadi error saat menyimpan");
-    }
-}
-
-/* =========================
-   EDIT VAULT
-========================= */
-function editVault(id, website, username){
-
-    mode = "edit";
-    editId = id;
-
-    document.getElementById('website').value = website;
-    document.getElementById('username').value = username;
-    document.getElementById('password').value = "";
-
-    document.getElementById('formTitle').innerText = "Edit Password";
-}
 /* =========================
    DELETE VAULT
 ========================= */
@@ -205,23 +279,6 @@ function checkStrength(password){
         bar.style.background = "#22c55e";
     }
 }
-
-/* =========================
-   VIEW PASSWORD
-========================= */
-function viewPassword(password){
-    alert("Password: " + password);
-}
-
-/* =========================
-   COPY PASSWORD
-========================= */
-function copyPassword(password){
-
-    navigator.clipboard.writeText(password);
-    alert("Password berhasil dicopy");
-}
-
 /* =========================
    SETTINGS
 ========================= */

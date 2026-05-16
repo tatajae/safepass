@@ -27,37 +27,13 @@ $totalVault = $stmtVault
    WEAK PASSWORD
 ========================= */
 
-$stmtWeak = $conn->prepare(
-    "SELECT COUNT(*) as weak
-     FROM vaults
-     WHERE user_id=?
-     AND password_strength='Weak'"
-);
-
-$stmtWeak->bind_param("i", $user_id);
-
-$stmtWeak->execute();
-
-$weakPassword = $stmtWeak
-    ->get_result()
-    ->fetch_assoc()['weak'];
+$weakPassword = 0;
 
 /* =========================
    SECURITY SCORE
 ========================= */
 
-if($totalVault > 0){
-
-    $securityScore =
-        100 - (
-            ($weakPassword / $totalVault) * 100
-        );
-
-}else{
-
-    $securityScore = 100;
-}
-
+$securityScore = 100;
 $securityScore = round($securityScore);
 
 ?>
@@ -221,7 +197,15 @@ $securityScore = round($securityScore);
         </div>
 
         <!-- QUICK ACTION -->
+        <div class="vault-section">
 
+        <h2>
+            My Vault
+        </h2>
+
+        <div id="vaultContainer"></div>
+
+        </div>
         <div class="quick-actions">
 
             <button
@@ -246,6 +230,8 @@ $securityScore = round($securityScore);
 
 </div>
 
+<script src="../assets/js/crypto.js"></script>
+<script src="../assets/js/vault.js"></script>
 <script src="../assets/js/auto_logout.js"></script>
 
 </body>

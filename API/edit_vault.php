@@ -5,33 +5,53 @@ include '../config/db.php';
 
 header('Content-Type: application/json');
 
-$data = json_decode(file_get_contents("php://input"), true);
+$data = json_decode(
+    file_get_contents("php://input"),
+    true
+);
 
-$id = $data['id'];
-$website = $data['website'];
-$username = $data['username'];
-$password = $data['password'];
+$id =
+  $data['id'] ?? '';
 
-if(!$id || !$website || !$username || !$password){
+$encrypted_data =
+  $data['encrypted_data'] ?? '';
+
+$iv =
+  $data['iv'] ?? '';
+
+$salt =
+  $data['salt'] ?? '';
+
+if(
+    !$id ||
+    !$encrypted_data ||
+    !$iv ||
+    !$salt
+){
+
     echo json_encode([
         "success" => false,
         "message" => "Data tidak lengkap"
     ]);
+
     exit;
 }
 
-/* UPDATE DATA */
+/* UPDATE ENCRYPTED VAULT */
 $stmt = $conn->prepare("
     UPDATE vaults
-    SET website=?, username=?, ciphertext=?
+    SET
+        encrypted_data=?,
+        iv=?,
+        salt=?
     WHERE id=?
 ");
 
 $stmt->bind_param(
     "sssi",
-    $website,
-    $username,
-    $password,
+    $encrypted_data,
+    $iv,
+    $salt,
     $id
 );
 
