@@ -1,320 +1,459 @@
-
-let mode = "add";
 let editId = null;
-/*===================/
-   VAULT ENCRYPTION
-/===================*/
 
-async function savePassword(){
+/* =========================
+   SAVE VAULT
+========================= */
+async function savePassword() {
 
     const website =
-      document.getElementById('website').value;
+        document.getElementById('website').value.trim();
 
     const username =
-      document.getElementById('username').value;
+        document.getElementById('username').value.trim();
 
     const password =
-      document.getElementById('password').value;
+        document.getElementById('password').value.trim();
 
     const notes =
-      document.getElementById('notes').value;
+        document.getElementById('notes').value.trim();
 
-/* VALIDASI */ 
-    if( !website || !username || !password ){ 
-      alert( "Website, Username, dan Password wajib diisi" ); 
-      return; 
+    /* VALIDASI */
+    if (!website || !username || !password) {
+
+        alert("Semua field wajib diisi");
+
+        return;
     }
 
-    const vaultData = {
-        website,
-        username,
-        password,
-        notes
-    };
+    try {
 
-    const masterPassword =
-      sessionStorage.getItem(
-        'masterPassword'
-      );
+        const vaultData = {
+            website,
+            username,
+            password,
+            notes
+        };
 
-    const encrypted =
-      await encryptData(
-        masterPassword,
-        vaultData
-      );
+        const masterPassword =
+            sessionStorage.getItem('masterPassword');
 
-    const response =
-      await fetch(
-        '../api/save_vault.php',
-        {
-            method:'POST',
+        if (!masterPassword) {
 
-            headers:{
-                'Content-Type':
-                  'application/json'
+            alert("Session master password hilang");
+
+            window.location = "login.php";
+
+            return;
+        }
+
+        /* ENCRYPT */
+        const encrypted =
+            await encryptData(
+                masterPassword,
+                vaultData
+            );
+
+        let apiUrl = "../api/save_vault.php";
+
+        /* MODE EDIT */
+        if (editId !== null) {
+          apiUrl = "../api/edit_vault.php";
+        }
+
+        const response = await fetch(apiUrl, {
+
+            method: "POST",
+
+            headers: {
+                "Content-Type": "application/json"
             },
 
             body: JSON.stringify({
+
+                id: editId,
+
                 encrypted_data:
-                  encrypted.encrypted_data,
+                    encrypted.encrypted_data,
 
                 iv:
-                  encrypted.iv,
+                    encrypted.iv,
 
                 salt:
-                  encrypted.salt
+                    encrypted.salt
             })
+        });
+
+        const data =
+            await response.json();
+
+        alert(data.message);
+
+        if (data.success) {
+
+          editId = null;
+          clearForm();
+          loadVault();
         }
-      );
 
-    const data =
-      await response.json();
+    } catch (err) {
 
-    alert(data.message);
+        console.error(err);
 
-    if(data.success){
-        loadVault();
+        alert("Gagal menyimpan vault");
     }
 }
 
-async function loadVault(){
+/* =========================
+   LOAD VAULT
+========================= */
+/* =========================
+   LOAD VAULT
+========================= */
+async function loadVault() {
 
-    try{
+    try {
 
         const response =
-          await fetch(
-            '../api/get_vault.php'
-          );
+            await fetch(
+                "../api/get_vault.php"
+            );
 
         const data =
-          await response.json();
+            await response.json();
 
-        if(!data.success){
+        const vaultContainer =
+            document.getElementById(
+                "vaultContainer"
+            );
 
-            alert("Gagal load vault");
+        vaultContainer.innerHTML = "";
+
+        if (!data.success) {
+
+            vaultContainer.innerHTML = `
+                <div class="table-row">
+                    <span>Gagal load data</span>
+                </div>
+            `;
 
             return;
         }
 
         const masterPassword =
-          sessionStorage.getItem(
-            'masterPassword'
-          );
+            sessionStorage.getItem(
+                "masterPassword"
+            );
 
-        const vaultContainer =
-          document.getElementById(
-            'vaultContainer'
-          );
+        if(!masterPassword){
 
-        vaultContainer.innerHTML = '';
+            alert("Session habis, login ulang");
 
-        for(const item of data.vaults){
+            window.location = "login.php";
 
-            const decrypted =
-              await decryptData(
-                masterPassword,
-                item.encrypted_data,
-                item.iv,
-                item.salt
-              );
+            return;
+        }
 
-            vaultContainer.innerHTML += `
-                <div class="vault-card">
+        /* LOOP DATA */
+        for (const item of data.vaults) {
 
-                    <h3>
-                      ${decrypted.website}
-                    </h3>
+            try {
 
-                    <p>
-                      Username:
-                      ${decrypted.username}
-                    </p>
+                const decrypted =
+                    await decryptData(
+                        masterPassword,
+                        item.encrypted_data,
+                        item.iv,
+                        item.salt
+                    );
 
-                    <p>
-                      Password:
-                      ${decrypted.password}
-                    </p>
+                vaultContainer.innerHTML += `
 
-                    <p>
-                      Notes:
-                      ${decrypted.notes}
-                    </p>
+                    <div class="table-row">
 
+                        <span>
+                            ${decrypted.website}
+                        </span>
+
+                        <span>
+                            ${decrypted.username}
+                        </span>
+
+                        <span>
+                            ••••••••
+                        </span>
+
+                        <span class="actions">
+
+                            <!-- VIEW -->
+                            <button
+                                class="view-btn"
+                                onclick='viewPassword(
+                                    ${JSON.stringify(decrypted.password)}
+                                )'
+                            >
+                                <i class="bi bi-eye-fill"></i>
+                            </button>
+
+                            <!-- COPY -->
+                            <button
+                                class="copy-btn"
+                                onclick='copyPassword(
+                                    ${JSON.stringify(decrypted.password)}
+                                )'
+                            >
+                                <i class="bi bi-clipboard-fill"></i>
+                            </button>
+
+                            <!-- EDIT -->
+                            <button
+                                class="edit-btn"
+                                onclick='editVault(
+                                    ${item.id},
+                                    ${JSON.stringify(decrypted.website)},
+                                    ${JSON.stringify(decrypted.username)},
+                                    ${JSON.stringify(decrypted.password)},
+                                    ${JSON.stringify(decrypted.notes || "")}
+                                )'
+                            >
+                                <i class="bi bi-pencil-square"></i>
+                            </button>
+
+                            <!-- DELETE -->
+                            <button
+                                class="delete-btn"
+                                onclick="deleteVault(${item.id})"
+                            >
+                                <i class="bi bi-trash-fill"></i>
+                            </button>
+
+                        </span>
+
+                    </div>
+                `;
+
+            } catch(err){
+
+                console.error("Decrypt gagal", err);
+            }
+        }
+
+        /* KOSONG */
+        if (data.vaults.length === 0) {
+
+            vaultContainer.innerHTML = `
+                <div class="table-row">
+                    <span>Tidak ada data</span>
+                    <span>-</span>
+                    <span>-</span>
+                    <span>-</span>
                 </div>
             `;
         }
 
-    } catch(err){
+    } catch (err) {
 
         console.error(err);
 
-        alert("Gagal decrypt vault");
+        alert("Gagal load vault");
     }
 }
-/* =========================
-   DARK MODE
-========================= */
-window.toggleDarkMode = function(){
-
-    document.body.classList.toggle('dark-mode');
-
-    localStorage.setItem(
-        "theme",
-        document.body.classList.contains('dark-mode')
-            ? "dark"
-            : "light"
-    );
-};
 
 /* =========================
-   LOAD THEME
+   VIEW PASSWORD
 ========================= */
-window.onload = function(){
+function viewPassword(password) {
 
-    /* LOAD THEME */
-    if(localStorage.getItem("theme") === "dark"){
-        document.body.classList.add("dark-mode");
-    }
+    alert("Password : " + password);
+}
 
-    /* LOAD VAULT */
-    loadVault();
-};
+/* =========================
+   COPY PASSWORD
+========================= */
+function copyPassword(password) {
+
+    navigator.clipboard.writeText(password);
+
+    alert("Password berhasil dicopy");
+}
+
+/* =========================
+   EDIT VAULT
+========================= */
+function editVault(
+    id,
+    website,
+    username,
+    password,
+    notes
+) {
+
+    editId = id;
+
+    document.getElementById(
+        'website'
+    ).value = website;
+
+    document.getElementById(
+        'username'
+    ).value = username;
+
+    document.getElementById(
+        'password'
+    ).value = password;
+
+    document.getElementById(
+        'notes'
+    ).value = notes;
+
+    document.getElementById(
+        'formTitle'
+    ).innerHTML = `
+        <i class="bi bi-pencil-square"></i>
+        Edit Password
+    `;
+}
+
 /* =========================
    DELETE VAULT
 ========================= */
-async function deleteVault(id){
+async function deleteVault(id) {
 
-    if(!confirm("Yakin ingin menghapus data ini?")){
+    if (!confirm("Yakin ingin menghapus?")) {
         return;
     }
 
     try {
 
-        const res = await fetch("../api/delete_vault.php", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                id: id
-            })
-        });
+        const response = await fetch(
+            "../api/delete_vault.php",
+            {
+                method: "POST",
 
-        const data = await res.json();
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify({
+                    id: id
+                })
+            }
+        );
+
+        const data = await response.json();
 
         alert(data.message);
 
-        if(data.success){
-            location.reload();
+        if (data.success) {
+
+            loadVault();
         }
 
-    } catch(err){
+    } catch (err) {
+
         console.error(err);
-        alert("Gagal menghapus data");
+
+        alert("Gagal menghapus");
     }
 }
+
 /* =========================
    CLEAR FORM
 ========================= */
-function clearForm(){
+function clearForm() {
 
-    document.getElementById('website').value = "";
-    document.getElementById('username').value = "";
-    document.getElementById('password').value = "";
-
-    document.getElementById('formTitle').innerText = "Tambah Password";
-
-    mode = "add";
     editId = null;
-}
 
-/* =========================
-   SEARCH VAULT
-========================= */
-function searchVault(){
+    document.getElementById(
+        'website'
+    ).value = "";
 
-    const input = document.getElementById('search').value.toLowerCase();
-    const rows = document.querySelectorAll('.table-row');
+    document.getElementById(
+        'username'
+    ).value = "";
 
-    rows.forEach(row => {
-        row.style.display =
-            row.innerText.toLowerCase().includes(input)
-                ? "grid"
-                : "none";
-    });
+    document.getElementById(
+        'password'
+    ).value = "";
+
+    document.getElementById(
+        'notes'
+    ).value = "";
+
+    document.getElementById(
+        'formTitle'
+    ).innerHTML = `
+        <i class="bi bi-plus-circle-fill"></i>
+        Tambah Password
+    `;
 }
 
 /* =========================
    PASSWORD STRENGTH
 ========================= */
-function checkStrength(password){
+function checkStrength(password) {
 
-    const text = document.getElementById('strengthText');
-    const bar = document.getElementById('strengthFill');
+    const text =
+        document.getElementById(
+            'strengthText'
+        );
+
+    const bar =
+        document.getElementById(
+            'strengthFill'
+        );
 
     let score = 0;
 
-    if(password.length >= 8) score++;
-    if(/[A-Z]/.test(password)) score++;
-    if(/[a-z]/.test(password)) score++;
-    if(/[0-9]/.test(password)) score++;
-    if(/[\W]/.test(password)) score++;
+    if (password.length >= 8) score++;
+    if (/[A-Z]/.test(password)) score++;
+    if (/[a-z]/.test(password)) score++;
+    if (/[0-9]/.test(password)) score++;
+    if (/[\W]/.test(password)) score++;
 
-    if(score <= 2){
-        text.innerText = "Strength: Weak";
-        text.style.color = "#ef4444";
+    if (score <= 2) {
+
+        text.innerText =
+            "Strength : Weak";
+
         bar.style.width = "33%";
-        bar.style.background = "#ef4444";
+        bar.style.background = "red";
+
     }
-    else if(score <= 4){
-        text.innerText = "Strength: Medium";
-        text.style.color = "#f59e0b";
+    else if (score <= 4) {
+
+        text.innerText =
+            "Strength : Medium";
+
         bar.style.width = "66%";
-        bar.style.background = "#f59e0b";
+        bar.style.background = "orange";
+
     }
-    else{
-        text.innerText = "Strength: Strong";
-        text.style.color = "#22c55e";
+    else {
+
+        text.innerText =
+            "Strength : Strong";
+
         bar.style.width = "100%";
-        bar.style.background = "#22c55e";
+        bar.style.background = "green";
     }
 }
+
 /* =========================
-   SETTINGS
+   AUTO LOAD
 ========================= */
-async function saveSettings(){
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
 
-    const old_password = document.getElementById('old_password').value;
-    const new_password = document.getElementById('new_password').value;
-    const confirm_password = document.getElementById('confirm_password').value;
+        const vaultContainer =
+            document.getElementById(
+                "vaultContainer"
+            );
 
-    if(new_password !== confirm_password){
-        alert("Password tidak cocok");
-        return;
+        /* LOAD DATA VAULT */
+        if (vaultContainer) {
+
+            loadVault();
+        }
     }
-
-    try {
-
-        const res = await fetch('../api/update_security.php', {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                old_password,
-                new_password
-            })
-        });
-
-        const data = await res.json();
-        alert(data.message);
-
-    } catch(err){
-        console.error(err);
-        alert("Terjadi error saat menyimpan");
-    }
-}
-
-function resetSettings(){
-    location.reload();
-}
+);

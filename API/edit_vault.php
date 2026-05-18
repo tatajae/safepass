@@ -5,10 +5,34 @@ include '../config/db.php';
 
 header('Content-Type: application/json');
 
+/* =========================
+   VALIDASI LOGIN
+========================= */
+
+if(!isset($_SESSION['user_id'])){
+
+    echo json_encode([
+        "success" => false,
+        "message" => "Unauthorized"
+    ]);
+
+    exit;
+}
+
+$user_id = $_SESSION['user_id'];
+
+/* =========================
+   GET JSON
+========================= */
+
 $data = json_decode(
     file_get_contents("php://input"),
     true
 );
+
+/* =========================
+   AMBIL DATA
+========================= */
 
 $id =
   $data['id'] ?? '';
@@ -22,11 +46,15 @@ $iv =
 $salt =
   $data['salt'] ?? '';
 
+/* =========================
+   VALIDASI
+========================= */
+
 if(
-    !$id ||
-    !$encrypted_data ||
-    !$iv ||
-    !$salt
+    empty($id) ||
+    empty($encrypted_data) ||
+    empty($iv) ||
+    empty($salt)
 ){
 
     echo json_encode([
@@ -37,30 +65,44 @@ if(
     exit;
 }
 
-/* UPDATE ENCRYPTED VAULT */
+/* =========================
+   UPDATE VAULT
+========================= */
+
 $stmt = $conn->prepare("
     UPDATE vaults
     SET
         encrypted_data=?,
         iv=?,
         salt=?
-    WHERE id=?
+    WHERE id=? AND user_id=?
 ");
 
 $stmt->bind_param(
-    "sssi",
+    "sssii",
     $encrypted_data,
     $iv,
     $salt,
-    $id
+    $id,
+    $user_id
 );
 
 if($stmt->execute()){
 
-    echo json_encode([
-        "success" => true,
-        "message" => "Vault berhasil diupdate"
-    ]);
+    if($stmt->affected_rows > 0){
+
+        echo json_encode([
+            "success" => true,
+            "message" => "Vault berhasil diupdate"
+        ]);
+
+    } else {
+
+        echo json_encode([
+            "success" => false,
+            "message" => "Vault tidak ditemukan"
+        ]);
+    }
 
 } else {
 
