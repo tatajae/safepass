@@ -172,6 +172,7 @@ include '../config/session.php';
                         type="checkbox"
                         id="uppercase"
                         checked
+                        onchange="checkStrength(resultPassword.value)"
                     >
 
                     Huruf Besar
@@ -184,6 +185,7 @@ include '../config/session.php';
                         type="checkbox"
                         id="lowercase"
                         checked
+                        onchange="checkStrength(resultPassword.value)"
                     >
 
                     Huruf Kecil
@@ -196,6 +198,7 @@ include '../config/session.php';
                         type="checkbox"
                         id="number"
                         checked
+                        onchange="checkStrength(resultPassword.value)"
                     >
 
                     Angka
@@ -208,6 +211,7 @@ include '../config/session.php';
                         type="checkbox"
                         id="symbol"
                         checked
+                        onchange="checkStrength(resultPassword.value)"
                     >
 
                     Simbol

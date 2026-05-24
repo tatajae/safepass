@@ -124,26 +124,43 @@ function checkStrength(password){
             'strengthFill'
         );
 
-    let score = 0;
+    const uppercase =
+        document.getElementById(
+            'uppercase'
+        ).checked;
 
-    if(password.length >= 8)
-        score++;
+    const lowercase =
+        document.getElementById(
+            'lowercase'
+        ).checked;
 
-    if(/[A-Z]/.test(password))
-        score++;
+    const number =
+        document.getElementById(
+            'number'
+        ).checked;
 
-    if(/[a-z]/.test(password))
-        score++;
+    const symbol =
+        document.getElementById(
+            'symbol'
+        ).checked;
 
-    if(/[0-9]/.test(password))
-        score++;
+    let total = 0;
 
-    if(/[\W]/.test(password))
-        score++;
+    if(uppercase)
+        total++;
+
+    if(lowercase)
+        total++;
+
+    if(number)
+        total++;
+
+    if(symbol)
+        total++;
 
     /* WEAK */
 
-    if(score <= 2){
+    if(total <= 1){
 
         strengthText.innerHTML =
             "Strength : Weak";
@@ -160,7 +177,7 @@ function checkStrength(password){
 
     /* MEDIUM */
 
-    else if(score <= 4){
+    else if(total <= 3){
 
         strengthText.innerHTML =
             "Strength : Medium";

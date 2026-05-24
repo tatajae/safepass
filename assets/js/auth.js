@@ -120,19 +120,21 @@ async function login() {
       await response.json();
 
     if (data.success) {
+
       sessionStorage.setItem(
         'masterPassword',
         password
+      );
+
+      sessionStorage.setItem(
+        'email',
+        email
       );
 
       alert('Login berhasil');
 
       window.location =
         'dashboard.php';
-
-    } else {
-
-      alert(data.message);
     }
 
   } catch(err){

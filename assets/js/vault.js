@@ -13,7 +13,45 @@ async function savePassword() {
 
     const password =
         document.getElementById('password').value.trim();
+    /* =========================
+    PASSWORD STRENGTH
+    ========================= */
 
+    let password_strength = "Weak";
+
+    const hasLength =
+        password.length >= 8;
+
+    const hasLower =
+        /[a-z]/.test(password);
+
+    const hasUpper =
+        /[A-Z]/.test(password);
+
+    const hasNumber =
+        /[0-9]/.test(password);
+
+    const hasSymbol =
+        /[^A-Za-z0-9]/.test(password);
+
+    let score = 0;
+
+    if(hasLength) score++;
+    if(hasLower) score++;
+    if(hasUpper) score++;
+    if(hasNumber) score++;
+    if(hasSymbol) score++;
+
+    if(score >= 5){
+
+        password_strength =
+            "Strong";
+
+    }else if(score >= 3){
+
+        password_strength =
+            "Medium";
+    }
     const notes =
         document.getElementById('notes').value.trim();
 
@@ -63,7 +101,7 @@ async function savePassword() {
             apiUrl =
                 "../api/edit_vault.php";
         }
-
+        console.log(password_strength);
         const response =
             await fetch(apiUrl,{
 
@@ -74,9 +112,16 @@ async function savePassword() {
                 "application/json"
             },
 
-            body:JSON.stringify({
+           body: JSON.stringify({
 
-                id:editId,
+                id: editId,
+
+                website: website,
+
+                username: username,
+
+                password_strength:
+                    password_strength,
 
                 encrypted_data:
                     encrypted.encrypted_data,
@@ -188,11 +233,11 @@ async function loadVault(){
                 <div class="table-row">
 
                     <span>
-                        ${decrypted.website}
+                        ${item.website}
                     </span>
 
                     <span>
-                        ${decrypted.username}
+                        ${item.username}
                     </span>
 
                     <span>
@@ -278,17 +323,17 @@ async function loadVault(){
                     err
                 );
 
-                vaultContainer.innerHTML += `
+            vaultContainer.innerHTML += `
 
                 <div class="table-row">
 
-                    <span>
-                        ${item.website || "-"}
-                    </span>
+                <span>
+                    ${item.website}
+                </span>
 
-                    <span>
-                        ${item.username || "-"}
-                    </span>
+                <span>
+                    ${item.username}
+                </span>
 
                     <span style="
                         color:red;
@@ -527,11 +572,13 @@ decrypted.notes
 
 }
 
-catch{
+catch(err){
+
+console.log(err);
 
 alert(
 
-"❌ Wrong Master Password"
+"❌ Data rusak / gagal decrypt"
 
 );
 
@@ -765,7 +812,6 @@ function checkStrength(password){
     strengthFill.style.background =
     color;
 }
-
 
 /* =========================
 AUTO LOAD

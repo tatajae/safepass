@@ -27,8 +27,30 @@ $totalVault = $stmtVault
    WEAK PASSWORD
 ========================= */
 
-$weakPassword = 0;
+$stmtWeak = $conn->prepare(
 
+    "SELECT COUNT(*) as total
+
+     FROM vaults
+
+     WHERE user_id=?
+
+     AND password_strength='Weak'"
+
+);
+
+$stmtWeak->bind_param(
+
+    "i",
+
+    $user_id
+);
+
+$stmtWeak->execute();
+
+$weakPassword = $stmtWeak
+    ->get_result()
+    ->fetch_assoc()['total'];
 /* =========================
    SECURITY SCORE
 ========================= */

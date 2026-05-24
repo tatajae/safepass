@@ -11,6 +11,8 @@ $user_id = $_SESSION['user_id'];
 $stmt = $conn->prepare("
     SELECT
         id,
+        website,
+        username,
         encrypted_data,
         iv,
         salt

@@ -171,11 +171,15 @@ Zero Knowledge Protection
 <!-- BUTTON -->
 <div class="button-group">
 
-<button class="save-btn" onclick="saveSettings()">
+<button
+class="save-btn"
+onclick="saveSettings()">
 <i class="bi bi-floppy-fill"></i> Simpan
 </button>
 
-<button class="cancel-btn" onclick="resetSettings()">
+<button
+class="cancel-btn"
+onclick="resetSettings()">
 <i class="bi bi-arrow-counterclockwise"></i> Reset
 </button>
 
@@ -191,5 +195,6 @@ Zero Knowledge Protection
 
 <!-- JS -->
 <script src="../assets/js/auto_logout.js"></script>
+<script src="../assets/js/settings.js"></script>
 </body>
 </html>

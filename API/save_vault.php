@@ -11,52 +11,124 @@ $data = json_decode(
     true
 );
 
+/* =========================
+   USER
+========================= */
+
 $user_id =
-  $_SESSION['user_id'];
+    $_SESSION['user_id'];
+
+/* =========================
+   PLAINTEXT
+========================= */
+
+$website =
+    $data['website'] ?? '';
+
+$username =
+    $data['username'] ?? '';
+
+$password_strength =
+    $data['password_strength'] ?? '';
+
+/* =========================
+   ENCRYPTED
+========================= */
 
 $encrypted_data =
-  $data['encrypted_data'];
+    $data['encrypted_data'] ?? '';
 
 $iv =
-  $data['iv'];
+    $data['iv'] ?? '';
 
 $salt =
-  $data['salt'];
+    $data['salt'] ?? '';
+
+/* =========================
+   VALIDATION
+========================= */
+
+if(
+    empty($website) ||
+    empty($username) ||
+    empty($encrypted_data)
+){
+
+    echo json_encode([
+
+        "success" => false,
+
+        "message" =>
+        "Data kosong"
+
+    ]);
+
+    exit;
+}
+
+/* =========================
+   INSERT
+========================= */
 
 $stmt = $conn->prepare("
+
     INSERT INTO vaults(
+
         user_id,
+        website,
+        username,
+        password_strength,
         encrypted_data,
         iv,
         salt
+
     )
-    VALUES(?,?,?,?)
+
+    VALUES(?,?,?,?,?,?,?)
+
 ");
 
 $stmt->bind_param(
-    "isss",
+
+    "issssss",
+
     $user_id,
+    $website,
+    $username,
+    $password_strength,
     $encrypted_data,
     $iv,
     $salt
 );
-if(empty($encrypted_data)){
-    echo json_encode([
-        "success"=>false,
-        "message"=>"Data kosong"
-    ]);
-    exit;
-}elseif($stmt->execute()){
+
+$execute = $stmt->execute();
+
+/* =========================
+   RESPONSE
+========================= */
+
+if($execute){
 
     echo json_encode([
-        "success"=>true,
-        "message"=>"Vault tersimpan"
+
+        "success" => true,
+
+        "message" =>
+        "Vault tersimpan"
+
     ]);
 
 }else{
 
     echo json_encode([
-        "success"=>false,
-        "message"=>"Gagal menyimpan"
+
+        "success" => false,
+
+        "message" =>
+        $stmt->error
+
     ]);
 }
+
+exit;
+?>
