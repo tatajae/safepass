@@ -17,11 +17,9 @@ async function savePassword() {
     const notes =
         document.getElementById('notes').value.trim();
 
-    /* VALIDASI */
     if (!website || !username || !password) {
 
         alert("Semua field wajib diisi");
-
         return;
     }
 
@@ -35,42 +33,50 @@ async function savePassword() {
         };
 
         const masterPassword =
-            sessionStorage.getItem('masterPassword');
+            sessionStorage.getItem(
+                'masterPassword'
+            );
 
         if (!masterPassword) {
 
-            alert("Session master password hilang");
+            alert(
+                "Session master password hilang"
+            );
 
-            window.location = "login.php";
+            window.location =
+                "login.php";
 
             return;
         }
 
-        /* ENCRYPT */
         const encrypted =
             await encryptData(
                 masterPassword,
                 vaultData
             );
 
-        let apiUrl = "../api/save_vault.php";
+        let apiUrl =
+            "../api/save_vault.php";
 
-        /* MODE EDIT */
-        if (editId !== null) {
-          apiUrl = "../api/edit_vault.php";
+        if(editId!==null){
+
+            apiUrl =
+                "../api/edit_vault.php";
         }
 
-        const response = await fetch(apiUrl, {
+        const response =
+            await fetch(apiUrl,{
 
-            method: "POST",
+            method:"POST",
 
-            headers: {
-                "Content-Type": "application/json"
+            headers:{
+                "Content-Type":
+                "application/json"
             },
 
-            body: JSON.stringify({
+            body:JSON.stringify({
 
-                id: editId,
+                id:editId,
 
                 encrypted_data:
                     encrypted.encrypted_data,
@@ -88,30 +94,33 @@ async function savePassword() {
 
         alert(data.message);
 
-        if (data.success) {
+        if(data.success){
 
-          editId = null;
-          clearForm();
-          loadVault();
+            editId=null;
+
+            clearForm();
+
+            loadVault();
         }
 
-    } catch (err) {
+    }catch(err){
 
-        console.error(err);
+        console.log(err);
 
-        alert("Gagal menyimpan vault");
+        alert(
+            "Gagal menyimpan"
+        );
     }
 }
 
-/* =========================
-   LOAD VAULT
-========================= */
-/* =========================
-   LOAD VAULT
-========================= */
-async function loadVault() {
 
-    try {
+/* =========================
+   LOAD VAULT
+========================= */
+
+async function loadVault(){
+
+    try{
 
         const response =
             await fetch(
@@ -126,14 +135,20 @@ async function loadVault() {
                 "vaultContainer"
             );
 
-        vaultContainer.innerHTML = "";
+        vaultContainer.innerHTML="";
 
-        if (!data.success) {
+        if(!data.success){
 
-            vaultContainer.innerHTML = `
-                <div class="table-row">
-                    <span>Gagal load data</span>
-                </div>
+            vaultContainer.innerHTML=`
+
+            <div class="table-row">
+
+                <span>
+                Gagal load data
+                </span>
+
+            </div>
+
             `;
 
             return;
@@ -146,314 +161,624 @@ async function loadVault() {
 
         if(!masterPassword){
 
-            alert("Session habis, login ulang");
-
-            window.location = "login.php";
+            alert(
+                "Session habis"
+            );
 
             return;
         }
 
-        /* LOOP DATA */
-        for (const item of data.vaults) {
+        for(const item of data.vaults){
 
-            try {
+            try{
 
                 const decrypted =
-                    await decryptData(
-                        masterPassword,
-                        item.encrypted_data,
-                        item.iv,
-                        item.salt
-                    );
+
+                await decryptData(
+
+                    masterPassword,
+                    item.encrypted_data,
+                    item.iv,
+                    item.salt
+
+                );
 
                 vaultContainer.innerHTML += `
 
-                    <div class="table-row">
+                <div class="table-row">
 
-                        <span>
-                            ${decrypted.website}
-                        </span>
+                    <span>
+                        ${decrypted.website}
+                    </span>
 
-                        <span>
-                            ${decrypted.username}
-                        </span>
+                    <span>
+                        ${decrypted.username}
+                    </span>
 
-                        <span>
-                            ••••••••
-                        </span>
+                    <span>
+                        ••••••••
+                    </span>
 
-                        <span class="actions">
+                    <span class="actions">
 
-                            <!-- VIEW -->
-                            <button
-                                class="view-btn"
-                                onclick='viewPassword(
-                                    ${JSON.stringify(decrypted.password)}
-                                )'
-                            >
-                                <i class="bi bi-eye-fill"></i>
-                            </button>
+                    <!-- VIEW -->
+                    <button
+                    class="view-btn"
 
-                            <!-- COPY -->
-                            <button
-                                class="copy-btn"
-                                onclick='copyPassword(
-                                    ${JSON.stringify(decrypted.password)}
-                                )'
-                            >
-                                <i class="bi bi-clipboard-fill"></i>
-                            </button>
+                    onclick='viewPassword(
+                    ${JSON.stringify(item.encrypted_data)},
+                    ${JSON.stringify(item.iv)},
+                    ${JSON.stringify(item.salt)}
+                    )'
+                    >
 
-                            <!-- EDIT -->
-                            <button
-                                class="edit-btn"
-                                onclick='editVault(
-                                    ${item.id},
-                                    ${JSON.stringify(decrypted.website)},
-                                    ${JSON.stringify(decrypted.username)},
-                                    ${JSON.stringify(decrypted.password)},
-                                    ${JSON.stringify(decrypted.notes || "")}
-                                )'
-                            >
-                                <i class="bi bi-pencil-square"></i>
-                            </button>
+                    <i class="bi bi-eye-fill"></i>
 
-                            <!-- DELETE -->
-                            <button
-                                class="delete-btn"
-                                onclick="deleteVault(${item.id})"
-                            >
-                                <i class="bi bi-trash-fill"></i>
-                            </button>
+                    </button>
 
-                        </span>
 
-                    </div>
+                    <!-- COPY -->
+                    <button
+                    class="copy-btn"
+
+                    onclick='copyPassword(
+                    ${JSON.stringify(item.encrypted_data)},
+                    ${JSON.stringify(item.iv)},
+                    ${JSON.stringify(item.salt)}
+                    )'
+                    >
+
+                    <i class="bi bi-clipboard-fill"></i>
+
+                    </button>
+
+
+                    <!-- EDIT -->
+                    <button
+                    class="edit-btn"
+
+                    onclick='editVaultData(
+                    ${item.id},
+                    ${JSON.stringify(item.encrypted_data)},
+                    ${JSON.stringify(item.iv)},
+                    ${JSON.stringify(item.salt)}
+                    )'
+                    >
+
+                    <i class="bi bi-pencil-square"></i>
+
+                    </button>
+
+
+                    <!-- DELETE -->
+                    <button
+                    class="delete-btn"
+
+                    onclick='deleteVault(
+                    ${item.id}
+                    )'
+                    >
+
+                    <i class="bi bi-trash-fill"></i>
+
+                    </button>
+
+                    </span>
+
+                </div>
+
                 `;
 
-            } catch(err){
-
-                console.error("Decrypt gagal", err);
             }
-        }
 
-        /* KOSONG */
-        if (data.vaults.length === 0) {
+            catch(err){
 
-            vaultContainer.innerHTML = `
+                console.log(
+                    "Decrypt gagal:",
+                    err
+                );
+
+                vaultContainer.innerHTML += `
+
                 <div class="table-row">
-                    <span>Tidak ada data</span>
-                    <span>-</span>
-                    <span>-</span>
-                    <span>-</span>
+
+                    <span>
+                        ${item.website || "-"}
+                    </span>
+
+                    <span>
+                        ${item.username || "-"}
+                    </span>
+
+                    <span style="
+                        color:red;
+                        font-weight:bold;
+                    ">
+                        ❌ Data rusak / gagal decrypt
+                    </span>
+
+                    <span class="actions">
+
+                        <button
+                        class="view-btn"
+                        disabled>
+
+                        <i class="bi bi-eye-fill"></i>
+
+                        </button>
+
+                        <button
+                        class="copy-btn"
+                        disabled>
+
+                        <i class="bi bi-clipboard-fill"></i>
+
+                        </button>
+
+                        <button
+                        class="edit-btn"
+                        disabled>
+
+                        <i class="bi bi-pencil-square"></i>
+
+                        </button>
+
+                        <button
+                        class="delete-btn"
+
+                        onclick='deleteVault(
+                        ${item.id}
+                        )'
+                        >
+
+                        <i class="bi bi-trash-fill"></i>
+
+                        </button>
+
+                    </span>
+
                 </div>
-            `;
+
+                `;
+            }
+
         }
 
-    } catch (err) {
-
-        console.error(err);
-
-        alert("Gagal load vault");
     }
+
+    catch(err){
+
+        console.log(err);
+
+        alert(
+            "Gagal load vault"
+        );
+
+    }
+
 }
 
-/* =========================
-   VIEW PASSWORD
-========================= */
-function viewPassword(password) {
-
-    alert("Password : " + password);
-}
 
 /* =========================
-   COPY PASSWORD
+VIEW PASSWORD
 ========================= */
-function copyPassword(password) {
 
-    navigator.clipboard.writeText(password);
+async function viewPassword(
 
-    alert("Password berhasil dicopy");
-}
+    encryptedData,
+    iv,
+    salt
 
-/* =========================
-   EDIT VAULT
-========================= */
-function editVault(
-    id,
-    website,
-    username,
-    password,
-    notes
-) {
+){
 
-    editId = id;
+    const masterPassword=
 
-    document.getElementById(
-        'website'
-    ).value = website;
+    prompt(
+    "Masukkan Master Password"
+    );
 
-    document.getElementById(
-        'username'
-    ).value = username;
+    if(!masterPassword){
 
-    document.getElementById(
-        'password'
-    ).value = password;
-
-    document.getElementById(
-        'notes'
-    ).value = notes;
-
-    document.getElementById(
-        'formTitle'
-    ).innerHTML = `
-        <i class="bi bi-pencil-square"></i>
-        Edit Password
-    `;
-}
-
-/* =========================
-   DELETE VAULT
-========================= */
-async function deleteVault(id) {
-
-    if (!confirm("Yakin ingin menghapus?")) {
         return;
     }
 
-    try {
+    try{
 
-        const response = await fetch(
-            "../api/delete_vault.php",
-            {
-                method: "POST",
+        const decrypted=
 
-                headers: {
-                    "Content-Type": "application/json"
-                },
+        await decryptData(
 
-                body: JSON.stringify({
-                    id: id
-                })
-            }
+            masterPassword,
+            encryptedData,
+            iv,
+            salt
+
         );
 
-        const data = await response.json();
+        alert(
 
-        alert(data.message);
+            "Password : " +
 
-        if (data.success) {
+            decrypted.password
+        );
 
-            loadVault();
-        }
+    }
 
-    } catch (err) {
+    catch{
 
-        console.error(err);
+        alert(
 
-        alert("Gagal menghapus");
+        "❌ Wrong Master Password"
+
+        );
     }
 }
 
+
 /* =========================
-   CLEAR FORM
+COPY PASSWORD
 ========================= */
-function clearForm() {
 
-    editId = null;
+async function copyPassword(
 
-    document.getElementById(
-        'website'
-    ).value = "";
+encryptedData,
+iv,
+salt
 
-    document.getElementById(
-        'username'
-    ).value = "";
+){
 
-    document.getElementById(
-        'password'
-    ).value = "";
+const masterPassword=
 
-    document.getElementById(
-        'notes'
-    ).value = "";
+prompt(
+"Masukkan Master Password"
+);
 
-    document.getElementById(
-        'formTitle'
-    ).innerHTML = `
-        <i class="bi bi-plus-circle-fill"></i>
-        Tambah Password
-    `;
+if(!masterPassword){
+
+return;
+}
+
+try{
+
+const decrypted=
+
+await decryptData(
+
+masterPassword,
+encryptedData,
+iv,
+salt
+
+);
+
+navigator.clipboard.writeText(
+
+decrypted.password
+
+);
+
+alert(
+"Password dicopy"
+);
+
+}
+
+catch{
+
+alert(
+
+"❌ Wrong Master Password"
+
+);
+
+}
+
+}
+
+
+/* =========================
+EDIT VAULT
+========================= */
+
+async function editVaultData(
+
+id,
+encryptedData,
+iv,
+salt
+
+){
+
+const masterPassword=
+
+prompt(
+
+"Masukkan Master Password"
+
+);
+
+if(!masterPassword){
+
+return;
+}
+
+try{
+
+const decrypted=
+
+await decryptData(
+
+masterPassword,
+encryptedData,
+iv,
+salt
+
+);
+
+editVault(
+
+id,
+decrypted.website,
+decrypted.username,
+decrypted.password,
+decrypted.notes
+
+);
+
+}
+
+catch{
+
+alert(
+
+"❌ Wrong Master Password"
+
+);
+
+}
+
+}
+
+
+function editVault(
+
+id,
+website,
+username,
+password,
+notes
+
+){
+
+editId=id;
+
+document.getElementById(
+'website'
+).value=website;
+
+document.getElementById(
+'username'
+).value=username;
+
+document.getElementById(
+'password'
+).value=password;
+
+document.getElementById(
+'notes'
+).value=notes;
+
+}
+
+
+/* =========================
+DELETE
+========================= */
+
+async function deleteVault(id){
+
+if(
+!confirm(
+"Yakin hapus?"
+)
+){
+
+return;
+}
+
+try{
+
+const response=
+
+await fetch(
+
+"../api/delete_vault.php",
+
+{
+
+method:"POST",
+
+headers:{
+
+"Content-Type":
+
+"application/json"
+
+},
+
+body:JSON.stringify({
+
+id:id
+
+})
+
+}
+
+);
+
+const data=
+
+await response.json();
+
+alert(
+data.message
+);
+
+if(data.success){
+
+loadVault();
+
+}
+
+}catch{
+
+alert(
+"Gagal hapus"
+);
+
+}
+
+}
+
+
+/* =========================
+CLEAR
+========================= */
+
+function clearForm(){
+
+editId=null;
+
+document.getElementById(
+'website'
+).value="";
+
+document.getElementById(
+'username'
+).value="";
+
+document.getElementById(
+'password'
+).value="";
+
+document.getElementById(
+'notes'
+).value="";
 }
 
 /* =========================
-   PASSWORD STRENGTH
+PASSWORD STRENGTH
 ========================= */
-function checkStrength(password) {
 
-    const text =
-        document.getElementById(
-            'strengthText'
-        );
+function checkStrength(password){
 
-    const bar =
-        document.getElementById(
-            'strengthFill'
-        );
+    const strengthText =
+    document.getElementById(
+        "strengthText"
+    );
+
+    const strengthFill =
+    document.getElementById(
+        "strengthFill"
+    );
+
+    if(
+        !strengthText ||
+        !strengthFill
+    ){
+        return;
+    }
 
     let score = 0;
 
-    if (password.length >= 8) score++;
-    if (/[A-Z]/.test(password)) score++;
-    if (/[a-z]/.test(password)) score++;
-    if (/[0-9]/.test(password)) score++;
-    if (/[\W]/.test(password)) score++;
+        const hasLength =
+        password.length >= 8;
 
-    if (score <= 2) {
+        const hasLower =
+        /[a-z]/.test(password);
 
-        text.innerText =
-            "Strength : Weak";
+        const hasUpper =
+        /[A-Z]/.test(password);
 
-        bar.style.width = "33%";
-        bar.style.background = "red";
+        const hasNumber =
+        /[0-9]/.test(password);
 
-    }
-    else if (score <= 4) {
+        const hasSymbol =
+        /[^A-Za-z0-9]/.test(password);
 
-        text.innerText =
-            "Strength : Medium";
 
-        bar.style.width = "66%";
-        bar.style.background = "orange";
+        if(hasLength)
+            score++;
 
-    }
-    else {
+        if(hasLower)
+            score++;
 
-        text.innerText =
-            "Strength : Strong";
+        if(hasUpper)
+            score++;
 
-        bar.style.width = "100%";
-        bar.style.background = "green";
-    }
+        if(hasNumber)
+            score++;
+
+        if(hasSymbol)
+            score++;
+
+    let text="-";
+    let width="0%";
+    let color="#d1d5db";
+
+    switch(score){
+
+    case 1:
+    case 2:
+        text="Weak";
+        width="25%";
+        color="#ef4444";
+        break;
+
+    case 3:
+    case 4:
+        text="Medium";
+        width="50%";
+        color="#f59e0b";
+        break;
+
+    case 5:
+        text="Strong";
+        width="100%";
+        color="#22c55e";
+        break;
 }
 
-/* =========================
-   AUTO LOAD
-========================= */
-document.addEventListener(
-    "DOMContentLoaded",
-    function () {
+    if(password===""){
 
-        const vaultContainer =
-            document.getElementById(
-                "vaultContainer"
-            );
-
-        /* LOAD DATA VAULT */
-        if (vaultContainer) {
-
-            loadVault();
-        }
+        text="-";
+        width="0%";
+        color="#d1d5db";
     }
+
+    strengthText.innerText =
+    "Strength : " + text;
+
+    strengthFill.style.width =
+    width;
+
+    strengthFill.style.background =
+    color;
+}
+
+
+/* =========================
+AUTO LOAD
+========================= */
+
+document.addEventListener(
+
+"DOMContentLoaded",
+
+()=>{
+
+loadVault();
+
+}
+
 );

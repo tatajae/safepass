@@ -272,7 +272,7 @@ include '../config/session.php';
 
             </h3>
 
-            <p style="margin-top:15px; line-height:30px; color:#d1d5db;">
+            <p style="margin-top:15px; line-height:30px; color:#111827;">
 
                 SafePass menggunakan arsitektur
                 zero-knowledge encryption,
