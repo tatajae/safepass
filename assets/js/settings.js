@@ -1,140 +1,190 @@
 async function saveSettings(){
 
-    const oldPassword =
-    document.getElementById(
-    "old_password"
-    ).value;
+    const old_password =
+        document.getElementById(
+            'old_password'
+        ).value;
 
-    const newPassword =
-    document.getElementById(
-    "new_password"
-    ).value;
+    const new_password =
+        document.getElementById(
+            'new_password'
+        ).value;
 
-    const confirmPassword =
-    document.getElementById(
-    "confirm_password"
-    ).value;
+    const confirm_password =
+        document.getElementById(
+            'confirm_password'
+        ).value;
 
     if(
-        oldPassword === "" ||
-        newPassword === "" ||
-        confirmPassword === ""
+        old_password === "" ||
+        new_password === "" ||
+        confirm_password === ""
     ){
 
-        alert(
-        "Semua field wajib diisi"
-        );
+        alert("Semua field wajib diisi");
 
         return;
     }
 
-    if(
-        newPassword !== confirmPassword
-    ){
+    if(new_password !== confirm_password){
 
-        alert(
-        "Konfirmasi password tidak cocok"
-        );
+        alert("Konfirmasi password tidak cocok");
 
         return;
     }
 
     try{
 
-        /* GET USER EMAIL */
         const email =
-        sessionStorage.getItem(
-        "email"
-        );
+            sessionStorage.getItem(
+                'email'
+            );
 
         /* GET SALT */
         const saltResponse =
-        await fetch(
-
-        `../api/get_salt.php?email=${encodeURIComponent(email)}`
-
-        );
+            await fetch(
+                `../api/get_salt.php?email=${encodeURIComponent(email)}`
+            );
 
         const saltData =
-        await saltResponse.json();
+            await saltResponse.json();
 
         if(!saltData.success){
 
-            alert(
-            "User tidak ditemukan"
-            );
+            alert("User tidak ditemukan");
 
             return;
         }
 
-        /* GENERATE AUTH VERIFIER */
+        /* VERIFY OLD PASSWORD */
+        const oldVerifier =
+            await deriveAuthVerifier(
+                old_password,
+                saltData.salt
+            );
 
-        const oldAuthVerifier =
+        /* LOGIN CHECK */
+        const loginResponse =
+            await fetch(
+                '../api/login.php',
+                {
 
-        await deriveAuthVerifier(
+                    method:'POST',
 
-            oldPassword,
-            saltData.salt
+                    headers:{
+                        'Content-Type':
+                        'application/json'
+                    },
 
-        );
+                    body: JSON.stringify({
 
-        const newAuthVerifier =
+                        email,
+                        authVerifier:
+                        oldVerifier
 
-        await deriveAuthVerifier(
+                    })
+                }
+            );
 
-            newPassword,
-            saltData.salt
+        const loginData =
+            await loginResponse.json();
 
-        );
+        if(!loginData.success){
 
-        /* UPDATE */
+            alert("Password lama salah");
 
-        const response =
-        await fetch(
-
-        "../api/update_password.php",
-
-        {
-
-        method:"POST",
-
-        headers:{
-            "Content-Type":
-            "application/json"
-        },
-
-        body:JSON.stringify({
-
-            oldAuthVerifier:
-            oldAuthVerifier,
-
-            newAuthVerifier:
-            newAuthVerifier
-
-        })
-
+            return;
         }
 
-        );
+        /* NEW VERIFIER */
+        const newVerifier =
+            await deriveAuthVerifier(
+                new_password,
+                saltData.salt
+            );
+
+        /* UPDATE PASSWORD */
+        const response =
+            await fetch(
+                '../api/update_password.php',
+                {
+
+                    method:'POST',
+
+                    headers:{
+                        'Content-Type':
+                        'application/json'
+                    },
+
+                    body: JSON.stringify({
+
+                        new_auth_verifier:
+                        newVerifier
+
+                    })
+                }
+            );
 
         const data =
-        await response.json();
+            await response.json();
 
-        alert(
-        data.message
-        );
-
-        if(data.success){
-
-            resetSettings();
-        }
+        alert(data.message);
 
     }catch(err){
 
-        console.log(err);
+        console.error(err);
 
-        alert(
-        "Gagal update password"
-        );
+        alert("Server error");
     }
 }
+
+function saveSettings(){
+
+    const sessionTimeout =
+        document.getElementById('session_timeout').checked;
+
+    const encryptVault =
+        document.getElementById('encrypt_vault').checked;
+
+    const zeroKnowledge =
+        document.getElementById('zero_knowledge').checked;
+
+    localStorage.setItem('sessionTimeout', sessionTimeout);
+    localStorage.setItem('encryptVault', encryptVault);
+    localStorage.setItem('zeroKnowledge', zeroKnowledge);
+
+    alert("Settings disimpan");
+}
+
+function toggleDarkMode() {
+
+    document.body.classList.toggle('dark-mode');
+
+    // simpan status
+    if (document.body.classList.contains('dark-mode')) {
+        localStorage.setItem('theme', 'dark');
+    } else {
+        localStorage.setItem('theme', 'light');
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+
+    const theme = localStorage.getItem('theme');
+
+    if (theme === 'dark') {
+        document.body.classList.add('dark-mode');
+    }
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+
+    document.getElementById('session_timeout').checked =
+        localStorage.getItem('sessionTimeout') === "true";
+
+    document.getElementById('encrypt_vault').checked =
+        localStorage.getItem('encryptVault') === "true";
+
+    document.getElementById('zero_knowledge').checked =
+        localStorage.getItem('zeroKnowledge') === "true";
+});

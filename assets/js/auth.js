@@ -102,7 +102,10 @@ async function login() {
       await fetch(
         '../api/login.php',
         {
+
           method: 'POST',
+
+          credentials: 'include',
 
           headers: {
             'Content-Type':
@@ -135,6 +138,10 @@ async function login() {
 
       window.location =
         'dashboard.php';
+
+    } else {
+
+      alert(data.message);
     }
 
   } catch(err){

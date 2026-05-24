@@ -7,64 +7,15 @@ include '../config/db.php';
 header('Content-Type: application/json');
 
 $data = json_decode(
-file_get_contents("php://input"),
-true
+    file_get_contents("php://input"),
+    true
 );
 
 $user_id =
 $_SESSION['user_id'];
 
-$oldAuthVerifier =
-$data['oldAuthVerifier'];
-
-$newAuthVerifier =
-$data['newAuthVerifier'];
-
-
-/* GET USER */
-
-$stmt = $conn->prepare("
-SELECT auth_verifier
-FROM users
-WHERE id=?
-");
-
-$stmt->bind_param(
-"i",
-$user_id
-);
-
-$stmt->execute();
-
-$user =
-$stmt->get_result()->fetch_assoc();
-
-
-/* VERIFY */
-
-if(
-
-!hash_equals(
-
-$user['auth_verifier'],
-$oldAuthVerifier
-
-)
-
-){
-
-echo json_encode([
-
-"success"=>false,
-"message"=>"Password lama salah"
-
-]);
-
-exit;
-}
-
-
-/* UPDATE */
+$new_auth_verifier =
+$data['new_auth_verifier'];
 
 $update = $conn->prepare("
 UPDATE users
@@ -73,12 +24,9 @@ WHERE id=?
 ");
 
 $update->bind_param(
-
 "si",
-
-$newAuthVerifier,
+$new_auth_verifier,
 $user_id
-
 );
 
 if($update->execute()){
@@ -95,7 +43,7 @@ echo json_encode([
 echo json_encode([
 
 "success"=>false,
-"message"=>"Gagal update password"
+"message"=>"Gagal update"
 
 ]);
 

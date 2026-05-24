@@ -195,6 +195,7 @@ onclick="resetSettings()">
 
 <!-- JS -->
 <script src="../assets/js/auto_logout.js"></script>
+<script src="../assets/js/crypto.js"></script>
 <script src="../assets/js/settings.js"></script>
 </body>
 </html>

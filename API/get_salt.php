@@ -33,3 +33,4 @@ if($user){
         "success" => false
     ]);
 }
+?>
