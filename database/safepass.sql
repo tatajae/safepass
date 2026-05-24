@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: May 18, 2026 at 06:45 AM
+-- Generation Time: May 24, 2026 at 03:50 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -65,7 +65,25 @@ INSERT INTO `logs` (`id`, `user_id`, `activity`, `created_at`) VALUES
 (24, 26, 'login', '2026-05-18 03:50:12'),
 (25, 26, 'login', '2026-05-18 04:06:14'),
 (26, 26, 'login', '2026-05-18 04:15:43'),
-(27, 26, 'login', '2026-05-18 04:37:23');
+(27, 26, 'login', '2026-05-18 04:37:23'),
+(28, 26, 'login', '2026-05-23 10:31:07'),
+(29, 27, 'login', '2026-05-24 11:01:40'),
+(30, 27, 'login', '2026-05-24 11:11:17'),
+(31, 27, 'login', '2026-05-24 11:43:01'),
+(32, 26, 'login', '2026-05-24 11:46:36'),
+(33, 27, 'login', '2026-05-24 11:53:18'),
+(34, 27, 'login', '2026-05-24 12:11:09'),
+(35, 28, 'login', '2026-05-24 12:23:38'),
+(36, 28, 'login', '2026-05-24 12:34:18'),
+(37, 27, 'login', '2026-05-24 12:44:59'),
+(38, 27, 'login', '2026-05-24 12:53:32'),
+(39, 27, 'login', '2026-05-24 12:54:30'),
+(40, 27, 'login', '2026-05-24 13:05:53'),
+(41, 27, 'login', '2026-05-24 13:11:33'),
+(42, 27, 'login', '2026-05-24 13:21:29'),
+(43, 27, 'login', '2026-05-24 13:30:13'),
+(44, 29, 'login', '2026-05-24 13:31:30'),
+(45, 29, 'login', '2026-05-24 13:38:30');
 
 -- --------------------------------------------------------
 
@@ -88,7 +106,9 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `name`, `email`, `created_at`, `last_login`, `salt`, `auth_verifier`) VALUES
-(26, 'Tata', 'tata@gmail.com', '2026-05-15 12:20:07', NULL, 'I6VToFXGDsDErX3GWFlxIQ==', '3yVLF6cK9g07ZHtbsa2B+TdesClxMd1ScbB1iMAcrx0=');
+(26, 'Tata', 'tata@gmail.com', '2026-05-15 12:20:07', NULL, 'I6VToFXGDsDErX3GWFlxIQ==', '3yVLF6cK9g07ZHtbsa2B+TdesClxMd1ScbB1iMAcrx0='),
+(27, 'Jaehyun', 'jaehyun@gmail.com', '2026-05-24 11:01:19', NULL, 'dy4jlb/6gNxDlhqsUZMV2Q==', 'jWwR/QIO3xAL/NEINAy+NszBmlNqxJcv1d89LCXhpyM='),
+(29, 'Caca', 'caca@gmail.com', '2026-05-24 13:31:20', NULL, 'DIoeYFRBdxy4gmGLLBUWkw==', 'b6siUXqiQSCGfHtRCU45whL0MxJjmeNEiXZ4VQCJlOo=');
 
 -- --------------------------------------------------------
 
@@ -102,7 +122,7 @@ CREATE TABLE `vaults` (
   `website` varchar(255) NOT NULL,
   `username` varchar(255) NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `password_strength` varchar(20) DEFAULT NULL,
+  `password_strength` varchar(50) DEFAULT NULL,
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   `encrypted_data` longtext DEFAULT NULL,
   `iv` text DEFAULT NULL,
@@ -114,11 +134,9 @@ CREATE TABLE `vaults` (
 --
 
 INSERT INTO `vaults` (`id`, `user_id`, `website`, `username`, `created_at`, `password_strength`, `updated_at`, `encrypted_data`, `iv`, `salt`) VALUES
-(18, 26, '', '', '2026-05-16 06:19:51', NULL, '2026-05-16 06:19:51', 'zxVF5RCI7oZCsZcQ82ay0/C2vL2MoQRk8S3vNzv9gPwN0JbEGTjKEZgESWv/Hb5tAuC4/wfbVXVXUxp4YqxIW+Vti/QS+bQFpPOXSoPoWrtRbdOPUWaTsPEfzrQfcpxq8S7E4AhwoY8Yt0+csQ==', 'UiKXfCmzfGTJBNAO', 'RQRY4k/dJGM3AN09p9fjZQ=='),
-(19, 26, '', '', '2026-05-16 06:30:39', NULL, '2026-05-16 06:30:39', 'AQ5YUiPLdILtcHCKfgXhyMElbQ+I28EoSNntg3ctdUrXqZIwsECvBLSIgSvyX8bea8vlIXRHgIIxnG34i7FwVpH+IVYf0u501AYiXgZis9TXvf/JLC7SxbiiY/975J3uc7drC3lix56v', 'eo7SnLeYnK0xx6Td', 'osyk2xo+TzVt91un6gkgcA=='),
-(21, 26, 'Instagram', 'tata_gaming', '2026-05-18 03:54:45', NULL, '2026-05-18 04:22:59', 'UGRgs1wP6z84JrqIL7XFDVznyZ43MVT4GwK6hrcaLdpFpK+IlU32ZnjLAl3BOOhO/gvnXUiyZvG3Xi+c9tbz1OOBrykXpsWg0szm9AMBZ5Utriw7VgjLSMyBsCSWUNRATVc=', 'CFXDp5B09rkV6qIo', 'YfrKmEHB+ijtU5Z/qfXtHw=='),
-(22, 26, '', '', '2026-05-18 04:06:58', NULL, '2026-05-18 04:06:58', 'k4YMjY5t6bqF+M7TXody8aAnhp7JnFRrwqEMk6rDHUJJa5Sl6590vMe9z5zh+JMF+712LJCofJBktj4QnFki2uq62DT6dSRcUx6gccxMRbJ3raVZiNL5/anEb2S4bMXXdFRwFA==', 'beO51Zw+XE19uMkj', 'H4cAR0EyKaxuscIggWRGLw=='),
-(24, 26, '', '', '2026-05-18 04:27:46', NULL, '2026-05-18 04:27:46', '6QsPeKpgzOMPjNzqcLHEwaoJ7DDvEnBX18+6zGdYfnoi6laRAVnB/y29yrTmACU24Eh/PsKhF1CB6hQePYoLKzA3hlo5LExROFI17j8V7n86+SkdDJhdb9Y1tqEcJbrn', 'jlar5kr1AE6KqgOK', 'dKS9w/XEAYFHZF9O5YxrFA==');
+(33, 27, 'Gmail', 'Jaehyun127@gmail.com', '2026-05-24 11:34:11', 'Strong', '2026-05-24 11:34:11', 'q0F4b1iesWaGdoc9dbG3jCmTdAGI6rxAQyT5m3p1WCWnd8ReEZ2DJXTR0aqfSO5ypFSzZ0XFQGeVlfd79N+Kd+gz5Zr8EVSsGxbllxcz536swk9gpdS7xk5ABI76wqZPHtk45mJCNXMArg==', '9EmtHI2w6Er41URm', 'lloHD5XtZ14r74XF4BLCQQ=='),
+(35, 27, 'Instagram', 'Jaehyunnn', '2026-05-24 11:47:55', 'Weak', '2026-05-24 11:55:57', 'iI69PFRP8XblAz/jamalfznUatX7bu2olEkNl5Vtrx9tmS5kwZZEI0hXsrFMGXL7dmsU8srV9xCl/r01kKrBV4IBSGA2LLR5iSgt8oHVAXL4EKcUK7BGG60=', 'EhgiT7Z7MrQyQ18V', 'cAT32Y0EvvoNkZudnGEcwQ=='),
+(36, 27, 'Instagram', 'jejeje', '2026-05-24 12:12:11', 'Weak', '2026-05-24 12:12:11', 'ziWfK0tfmkZycF5rYtbyIYD8UD1mo2SJZXm4emmST/k7Zyt8aH620v7oCOQ+6+F3hhQ+6NWTYRj0I43o9qV6/852inu+SRJTwsfrDiReUI+AxvU7KO2/', 'dD0lXLnon9n37oAC', 'YISqHdYYLNDgIGQ6NUMc4A==');
 
 --
 -- Indexes for dumped tables
@@ -151,19 +169,19 @@ ALTER TABLE `vaults`
 -- AUTO_INCREMENT for table `logs`
 --
 ALTER TABLE `logs`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=28;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=46;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=27;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=30;
 
 --
 -- AUTO_INCREMENT for table `vaults`
 --
 ALTER TABLE `vaults`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=27;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=37;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
