@@ -1,11 +1,26 @@
-const timeout =
-    localStorage.getItem('sessionTimeout');
+let logoutTimer;
 
-if(timeout === "true"){
+function startTimer() {
 
-    setTimeout(() => {
+    logoutTimer = setTimeout(() => {
+
         alert("Session habis");
-        window.location = "../login.php";
-    }, 5 * 60 * 1000);
 
+        window.location = "../index.php";
+
+    }, 1 * 60 * 1000);
 }
+
+/* reset hanya kalau ada aktivitas BESAR */
+function resetTimer() {
+
+    clearTimeout(logoutTimer);
+    startTimer();
+}
+
+/* pakai event yang lebih ringan */
+document.addEventListener("keydown", resetTimer);
+document.addEventListener("click", resetTimer);
+
+/* start pertama */
+startTimer();

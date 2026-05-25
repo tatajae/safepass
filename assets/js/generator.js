@@ -2,6 +2,10 @@
    GENERATE PASSWORD
 ========================= */
 
+/* =========================
+   GENERATE PASSWORD
+========================= */
+
 function generatePassword(){
 
     const length =
@@ -62,13 +66,22 @@ function generatePassword(){
 
     let password = "";
 
+    /* CSPRNG */
+
+    const randomValues =
+        new Uint32Array(length);
+
+    crypto.getRandomValues(
+        randomValues
+    );
+
     for(let i = 0; i < length; i++){
 
         password += chars.charAt(
 
-            Math.floor(
-                Math.random() * chars.length
-            )
+            randomValues[i] %
+            chars.length
+
         );
     }
 

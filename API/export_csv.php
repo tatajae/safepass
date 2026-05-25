@@ -1,40 +1,29 @@
 <?php
 
 session_start();
-
-include "../config/db.php";
+include '../config/db.php';
 
 $user_id = $_SESSION['user_id'];
 
-header('Content-Type: text/csv');
-
-header(
-'Content-Disposition: attachment;
-filename="vault.csv"'
+$query = mysqli_query($conn,
+    "SELECT website, username, encrypted_data, iv, salt 
+     FROM vaults 
+     WHERE user_id='$user_id'"
 );
 
-$output = fopen("php://output", "w");
-
-fputcsv(
-  $output,
-  ['Website','Username']
-);
-
-$query = mysqli_query(
-  $conn,
-  "SELECT * FROM vaults
-   WHERE user_id='$user_id'"
-);
+$data = [];
 
 while($row = mysqli_fetch_assoc($query)){
 
-  fputcsv($output,[
+    $data[] = $row;
 
-    $row['website'],
-
-    $row['username']
-
-  ]);
 }
 
-fclose($output);
+header('Content-Type: application/json');
+header('Content-Disposition: attachment; filename="vault_backup.json"');
+
+echo json_encode($data, JSON_PRETTY_PRINT);
+
+exit;
+
+?>
